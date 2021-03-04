@@ -1,5 +1,5 @@
 blueye:
   blueye_interface:
     ros__parameters:
-      rate: 10
-      is_simulation: True
+      rate: 10.0
+      is_simulation: False
