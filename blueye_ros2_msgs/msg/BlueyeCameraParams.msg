@@ -6,4 +6,5 @@ int32 hue
 int32 recording_time
 uint32 resolution
 float64 tilt_angle
-int32 white_balance
+int8 tilt_speed_ref
+int32 whitebalance
