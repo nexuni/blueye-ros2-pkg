@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from blueye.sdk import Pioneer
+from blueye.sdk import Drone
 
 import rclpy
 from rclpy.node import Node
@@ -174,7 +174,7 @@ class BlueyeInterface(Node):
         print("Initializing Blueye connection")
         if not self.is_simulation:
             try:
-                self.drone = Pioneer()
+                self.drone = Drone()
                 print("Drone successfully instantiated.")
             except:
                 print("Could not instantiate Pioneer.")
