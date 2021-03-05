@@ -3,7 +3,7 @@ blueye: # namespace
     ros__parameters:
       # ROS- related params
       rate: 5.0 #Hz
-      is_simulation: False
+      is_simulation: True
       
       # Blueye ROV-related params
       # Camera params 

@@ -32,19 +32,36 @@ class BlueyeInterface(Node):
             self.drone.motion.sway = yaw_val
             self.drone.motion.yaw = sway_val
             self.drone.motion.heave = heave_val
+        else:
+            return
 
     def lights_lvl_ref_callback(self, msg):
         if not self.IS_SIMULATION:
             self.drone.lights = msg
+        else:
+            return
 
     def auto_mode_ref_callback(self, msg):
         if not self.IS_SIMULATION:
-        # 0 - none, 1 - aDepth, 2 - aHeading, 3 - both
-	
-        
+            # 00, 01, 10, 11 active state for depth-heading
+            mode = msg.data
+            if (mode == 0):
+                self.drone.motion.auto_depth_active = 0
+                self.drone.motion.auto_heading_active = 0
+            elif (mode == 1):
+                self.drone.motion.auto_depth_active = 0
+                self.drone.motion.auto_heading_active = 1
+            elif (mode == 2):
+                self.drone.motion.auto_depth_active = 1
+                self.drone.motion.auto_heading_active = 0
+            elif (mode == 3):
+                self.drone.motion.auto_depth_active = 1
+                self.drone.motion.auto_heading_active = 1
+        else:
+            return
 
     def camera_params_ref_callback(self, msg):
-        if not self.IS_SIMULATION:  # TODO: Add not !!!!!!!
+        if not self.IS_SIMULATION:
 
             if (msg.bitrate >= self.CAMERA_BITRATE_MIN and msg.bitrate <= self.CAMERA_BITRATE_MAX):
                 print("Bitrate in range. Setting.")
@@ -54,7 +71,7 @@ class BlueyeInterface(Node):
                 self.drone.camera.bitrate = self.CAMERA_BITRATE_MIN
             elif (msg.bitrate > self.CAMERA_BITRATE_MAX):
                 print("Desired bitrate above limit, setting to CAMERA_BITRATE_MAX")
-                self.drone.camera.bitrate = self.CAMERA_BITRATE_MAX 
+                self.drone.camera.bitrate = self.CAMERA_BITRATE_MAX
 
             if msg.exposure >= self.CAMERA_EXPOSURE_MIN and msg.exposure <= self.CAMERA_EXPOSURE_MAX:
                 self.drone.camera.exposure = msg.exposure
@@ -83,8 +100,8 @@ class BlueyeInterface(Node):
                 self.drone.camera.hue = self.CAMERA_HUE_MIN
             elif msg.hue > self.CAMERA_HUE_MAX:
                 print("Desired hue above limit, setting to CAMERA_HUE_MAX")
-                self.drone.camera.hue = self.CAMERA_HUE_MAX 
-            
+                self.drone.camera.hue = self.CAMERA_HUE_MAX
+
             if (msg.resolution in self.CAMERA_RESOLUTION_VALUES):
                 self.drone.camera.resolution = msg.resolution
                 print(msg.resolution)
@@ -99,26 +116,30 @@ class BlueyeInterface(Node):
             else:
                 print(
                     "Desired resolution in the 480-1080 range but not standard, setting to CAMERA_RESOLUTION_VALUES_MAX")
-                self.drone.camera.resolution = self.CAMERA_RESOLUTION_VALUES[2] 
+                self.drone.camera.resolution = self.CAMERA_RESOLUTION_VALUES[2]
 
-            if (msg.whitebalance == -1 or ( msg.whitebalance >= self.CAMERA_WHITEBALANCE_MIN and msg.whitebalance <= self.CAMERA_WHITEBALANCE_MAX )):
+            if (msg.whitebalance == -1 or (msg.whitebalance >= self.CAMERA_WHITEBALANCE_MIN and msg.whitebalance <= self.CAMERA_WHITEBALANCE_MAX)):
                 print("White balance in range. Setting.")
                 self.drone.camera.whitebalance = msg.whitebalance
             elif (msg.whitebalance < self.CAMERA_WHITEBALANCE_MIN):
-                print("Desired whitebalance below limit, setting to CAMERA_WHITEBALANCE_MIN")
+                print(
+                    "Desired whitebalance below limit, setting to CAMERA_WHITEBALANCE_MIN")
                 self.drone.camera.whitebalance = self.CAMERA_WHITEBALANCE_MIN
             elif (msg.whitebalance > self.CAMERA_WHITEBALANCE_MAX):
-                print("Desired whitebalance above limit, setting to CAMERA_WHITEBALANCE_MAX")
+                print(
+                    "Desired whitebalance above limit, setting to CAMERA_WHITEBALANCE_MAX")
                 self.drone.camera.whitebalance = self.CAMERA_WHITEBALANCE_MAX
 
-            if ( msg.tilt_speed_ref >= self.CAMERA_TILT_SPEED_MIN and msg.tilt_speed_ref <= self.CAMERA_TILT_SPEED_MAX ):
+            if (msg.tilt_speed_ref >= self.CAMERA_TILT_SPEED_MIN and msg.tilt_speed_ref <= self.CAMERA_TILT_SPEED_MAX):
                 self.drone.camera.tilt.set_speed(msg.tilt_speed_ref)
-            elif ( msg.tilt_speed < self.CAMERA_TILT_SPEED_MIN ):
+            elif (msg.tilt_speed < self.CAMERA_TILT_SPEED_MIN):
                 print("Desired hue below limit, setting to CAMERA_TILT_SPEED_MIN")
                 self.drone.camera.tilt.set_speed(CAMERA_TILT_SPEED_MIN)
-            elif ( msg.tilt_speed > self.CAMERA_TILT_SPEED_MAX ):
+            elif (msg.tilt_speed > self.CAMERA_TILT_SPEED_MAX):
                 print("Desired hue above limit, setting to CAMERA_TILT_SPEED_MAX")
-                self.drone.camera.tilt.set_speed(self.CAMERA_TILT_SPEED_MAX)  
+                self.drone.camera.tilt.set_speed(self.CAMERA_TILT_SPEED_MAX)
+        else:
+            return
 
     def declare_node_parameters(self):
         print("Declaring ROS parameters")
@@ -287,6 +308,8 @@ class BlueyeInterface(Node):
             msg.tilt_speed_ref = 0
             msg.whitebalance = self.drone.camera.whitebalance     # TODO: Check range
             self.camera_params_pub.publish(msg)
+        else:
+            return
 
     def euler_to_quaternion(self, roll, pitch, yaw):  # yaw (Z), pitch (Y), roll (X)
         # Abbreviations for the various angular functions
@@ -327,7 +350,7 @@ class BlueyeInterface(Node):
         self.connected_status_pub = self.create_publisher(
             Bool, "connected_status", 10)
         self.auto_mode_pub = self.create_publisher(
-            Int32, "auto_mode", 10)  # 0 - none, 1 - aDepth, 2 - aHeading, 3 - both
+            Int32, "auto_mode", 10)  # 00, 01, 10, 11 active state for depth-heading
         self.camera_params_pub = self.create_publisher(
             BlueyeCameraParams, "camera_params", 10)
 
