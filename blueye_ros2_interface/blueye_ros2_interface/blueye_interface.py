@@ -14,14 +14,13 @@ from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from blueye_ros2_msgs.msg import BlueyeCameraParams
 
-
 import math
 import sys
 
 
 class BlueyeInterface(Node):
 
-    def velocity_ref_callback(self, msg):
+    def thruster_force_norm_ref_callback(self, msg):	
         surge_val = msg.linear.x
         sway_val = msg.linear.y
         heave_val = msg.linear.z
@@ -398,7 +397,7 @@ class BlueyeInterface(Node):
             msg.angular.y = 0.0
             # yaw rate moment setpoint in range [-1, 1]
             msg.angular.z = float(self.drone.motion.yaw)
-            self.velocity_pub.publish(msg)
+            self.thruster_force_norm_pub.publish(msg)
 
             # Publishing light level as an Int32 msg
             msg = Int32()
@@ -471,7 +470,7 @@ class BlueyeInterface(Node):
         print("Initializing ROS subscribers")
         # Initialize ROS subscribers to ROV variables' reference - ROV set topics
         self.create_subscription(
-            Twist, "velocity_ref", self.velocity_ref_callback, 10)
+            Twist, "thruster_force_norm_ref", self.thruster_force_norm_ref_callback, 10)
         self.create_subscription(
             Int32, "lights_lvl_ref", self.lights_lvl_ref_callback, 10)
         self.create_subscription(
@@ -487,8 +486,8 @@ class BlueyeInterface(Node):
         print("Initializing ROS publishers")
         # Initialize ROS publishers of ROV variables - ROV get topics
         self.pose_pub = self.create_publisher(Pose, "pose", 10)
-        self.velocity_pub = self.create_publisher(
-            Twist, "velocity", 10)
+        self.thruster_force_norm_pub = self.create_publisher(
+            Twist, "thruster_force_norm", 10)
         self.lights_lvl_pub = self.create_publisher(
             Int32, "lights_lvl", 10)
         self.connected_status_pub = self.create_publisher(
