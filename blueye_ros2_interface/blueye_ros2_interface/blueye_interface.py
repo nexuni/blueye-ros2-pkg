@@ -475,6 +475,11 @@ class BlueyeInterface(Node):
             msg.data = int(self.drone.config.water_density)
             self.water_density_pub.publish(msg)
 
+            # Publish ROV's IP address
+            msg = String()
+            msg.data = self.drone.logs.ip
+            self.ip_address_pub.publish(msg)
+
         else:
             return
 
@@ -534,6 +539,8 @@ class BlueyeInterface(Node):
             Float32, "slow_gain", 10)
         self.water_density_pub = self.create_publisher(
             Int32, "water_density", 10)
+        self.ip_address_pub = self.create_publisher(
+            String, "ip_address", 10)
 
     def initialize_blueye_connection(self):
         print("Initializing Blueye connection")
