@@ -44,6 +44,10 @@ blueye: # namespace
       lights_level_min: 0
       lights_level_max: 255
       
+      # Velocities forces limits, float
+      velocity_force_min: -1
+      velocity_force_max: 1
+      
             
       
        # type: , range: , unit: 

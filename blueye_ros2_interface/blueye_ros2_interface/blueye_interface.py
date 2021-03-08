@@ -28,10 +28,50 @@ class BlueyeInterface(Node):
 
         if not self.IS_SIMULATION:
             # TODO: Check if and why yaw and sway are switched
-            self.drone.motion.surge = surge_val
-            self.drone.motion.sway = yaw_val
-            self.drone.motion.yaw = sway_val
-            self.drone.motion.heave = heave_val
+            if (surge_val >= self.VELOCITY_FORCE_MIN and surge_val <= self.VELOCITY_FORCE_MAX):
+                print("Surge force in range. Setting")
+                self.drone.motion.surge = surge_val
+            elif (surge_val < self.VELOCITY_FORCE_MIN):
+                print("Surge force is below range. Setting to VELOCITY_FORCE_MIN")
+                self.drone.motion.surge = self.VELOCITY_FORCE_MIN
+            elif (surge_val > self.VELOCITY_FORCE_MAX):
+                print("Surge force is below range. Setting to VELOCITY_FORCE_MAX")
+                self.drone.motion.surge = self.VELOCITY_FORCE_MAX
+
+            if (sway_val >= self.VELOCITY_FORCE_MIN and sway_val <= self.VELOCITY_FORCE_MAX):
+                print("Sway force in range. Setting")
+                self.drone.motion.sway = sway_val  # TODO: Check if .yaw
+            elif (sway_val < self.VELOCITY_FORCE_MIN):
+                print("Sway force is below range. Setting to VELOCITY_FORCE_MIN")
+                self.drone.motion.sway = self.VELOCITY_FORCE_MIN
+            elif (sway_val > self.VELOCITY_FORCE_MAX):
+                print("Sway force is below range. Setting to VELOCITY_FORCE_MAX")
+                self.drone.motion.sway = self.VELOCITY_FORCE_MAX
+
+            if (heave_val >= self.VELOCITY_FORCE_MIN and heave_val <= self.VELOCITY_FORCE_MAX):
+                print("Heave force in range. Setting")
+                self.drone.motion.heave = heave_val
+            elif (heave_val < self.VELOCITY_FORCE_MIN):
+                print("Heave force is below range. Setting to VELOCITY_FORCE_MIN")
+                self.drone.motion.heave = self.VELOCITY_FORCE_MIN
+            elif (heave_val > self.VELOCITY_FORCE_MAX):
+                print("Heave force is below range. Setting to VELOCITY_FORCE_MAX")
+                self.drone.motion.heave = self.VELOCITY_FORCE_MAX
+
+            if (yaw_val >= self.VELOCITY_FORCE_MIN and yaw_val <= self.VELOCITY_FORCE_MAX):
+                print("Yaw moment force in range. Setting")
+                self.drone.motion.yaw = yaw_val  # TODO: Check if .sway
+            elif (yaw_val < self.VELOCITY_FORCE_MIN):
+                print("Yaw moment  is below range. Setting to VELOCITY_FORCE_MIN")
+                self.drone.motion.yaw = self.VELOCITY_FORCE_MIN
+            elif (yaw_val > self.VELOCITY_FORCE_MAX):
+                print("Yaw moment  is below range. Setting to VELOCITY_FORCE_MAX")
+                self.drone.motion.yaw = self.VELOCITY_FORCE_MAX
+
+            #self.drone.motion.surge = surge_val
+            #self.drone.motion.sway = yaw_val
+            #self.drone.motion.yaw = sway_val
+            #self.drone.motion.heave = heave_val
         else:
             return
 
@@ -66,6 +106,8 @@ class BlueyeInterface(Node):
             elif (mode == 3):
                 self.drone.motion.auto_depth_active = 1
                 self.drone.motion.auto_heading_active = 1
+            else:
+                print("Invalid auto-mode. Keeping the current mode.")
         else:
             return
 
@@ -193,6 +235,10 @@ class BlueyeInterface(Node):
         self.declare_parameter('lights_level_min', 0)
         self.declare_parameter('lights_level_max', 255)
 
+        # Reference force for velocities limits
+        self.declare_parameter('velocity_force_min', -1)
+        self.declare_parameter('velocity_force_max', 1)
+
     def get_ros_params(self):
         # Setting ROS parameters
         self.RATE = self.get_parameter(
@@ -252,6 +298,12 @@ class BlueyeInterface(Node):
             'lights_level_min').get_parameter_value().integer_value
         self.LIGHTS_LEVEL_MAX = self.get_parameter(
             'lights_level_max').get_parameter_value().integer_value
+
+        # Reference forces' limits
+        self.VELOCITY_FORCE_MIN = self.get_parameter(
+            'velocity_force_min').get_parameter_value().integer_value
+        self.VELOCITY_FORCE_MAX = self.get_parameter(
+            'velocity_force_max').get_parameter_value().integer_value
 
     def set_blueye_params(self):
         return
@@ -384,7 +436,7 @@ class BlueyeInterface(Node):
         self.camera_params_pub = self.create_publisher(
             BlueyeCameraParams, "camera_params", 10)
         self.battery_percentage_pub = self.create_publisher(
-            BlueyeCameraParams, "battery_percentage", 10)
+            Int32, "battery_percentage", 10)
 
     def initialize_blueye_connection(self):
         print("Initializing Blueye connection")
