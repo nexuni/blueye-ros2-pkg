@@ -306,6 +306,11 @@ class BlueyeInterface(Node):
             msg.data = int(self.drone.lights)
             self.lights_lvl_pub.publish(msg)
 
+            # Publish battery percentage in [0, 100] range as Int32
+            msg = Int32()
+            msg.data = int(self.drone.battery_state_of_charge)
+            self.battery_percentage_pub.publish(msg)
+
             # Publishing connection status
             msg = Bool()
             msg.data = self.drone.connection_established
@@ -378,6 +383,8 @@ class BlueyeInterface(Node):
             Int32, "auto_mode", 10)  # 00, 01, 10, 11 active state for depth-heading
         self.camera_params_pub = self.create_publisher(
             BlueyeCameraParams, "camera_params", 10)
+        self.battery_percentage_pub = self.create_publisher(
+            BlueyeCameraParams, "battery_percentage", 10)
 
     def initialize_blueye_connection(self):
         print("Initializing Blueye connection")
