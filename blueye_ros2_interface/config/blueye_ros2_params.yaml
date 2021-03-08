@@ -3,7 +3,7 @@ blueye: # namespace
     ros__parameters:
       # ROS- related params
       rate: 5.0 #Hz
-      is_simulation: True
+      is_simulation: False
       
       # Blueye ROV-related params
       # Camera params 
@@ -40,7 +40,9 @@ blueye: # namespace
       camera_tilt_speed_min: -1
       camera_tilt_speed_max: 1
       
-      
+      # Lights level limits
+      lights_level_min: 0
+      lights_level_max: 255
       
             
       

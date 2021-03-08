@@ -21,13 +21,13 @@ import sys
 class BlueyeInterface(Node):
 
     def velocity_ref_callback(self, msg):
-        surge_val = 0.25 * msg.linear.x
-        sway_val = 0.25 * msg.linear.y
-        heave_val = 0.25 * msg.linear.z
-        yaw_val = 0.25 * msg.angular.z
+        surge_val = msg.linear.x
+        sway_val = msg.linear.y
+        heave_val = msg.linear.z
+        yaw_val = msg.angular.z
 
-        # self.drone.motion.send_thruster_setpoint(surge=surge_val, sway=sway_val, heave=heave_val, yaw=yaw_val)
         if not self.IS_SIMULATION:
+            # TODO: Check if and why yaw and sway are switched
             self.drone.motion.surge = surge_val
             self.drone.motion.sway = yaw_val
             self.drone.motion.yaw = sway_val
@@ -36,8 +36,17 @@ class BlueyeInterface(Node):
             return
 
     def lights_lvl_ref_callback(self, msg):
+        lights_ref = msg.data
         if not self.IS_SIMULATION:
-            self.drone.lights = msg
+            if (lights_ref >= self.LIGHTS_LEVEL_MIN and lights_ref <= self.LIGHTS_LEVEL_MAX):
+                print("Desired light level is in range. Setting.")
+                self.drone.lights = lights_ref
+            elif (lights_ref < self.LIGHTS_LEVEL_MIN):
+                print("Desired light level  below range. Setting to LIGHTS_LEVEL_MIN.")
+                self.drone.lights = self.LIGHTS_LEVEL_MIN
+            elif (lights_ref > self.LIGHTS_LEVEL_MAX):
+                print("Desired light level  above range. Setting to LIGHTS_LEVEL_MAX.")
+                self.drone.lights = self.LIGHTS_LEVEL_MAX
         else:
             return
 
@@ -74,6 +83,7 @@ class BlueyeInterface(Node):
                 self.drone.camera.bitrate = self.CAMERA_BITRATE_MAX
 
             if msg.exposure >= self.CAMERA_EXPOSURE_MIN and msg.exposure <= self.CAMERA_EXPOSURE_MAX:
+                print("Exposure in range. Setting.")
                 self.drone.camera.exposure = msg.exposure
             elif msg.exposure < self.CAMERA_EXPOSURE_MIN:
                 print("Desired exposure below limit, setting to CAMERA_EXPOSURE_MIN")
@@ -83,6 +93,7 @@ class BlueyeInterface(Node):
                 self.drone.camera.exposure = self.CAMERA_EXPOSURE_MAX
 
             if msg.frames_per_second in self.CAMERA_FRAMERATE_VALUES:
+                print("Framerate in range. Setting.")
                 self.drone.camera.framerate = msg.frames_per_second
             elif msg.frames_per_second < self.CAMERA_FRAMERATE_VALUES[0]:
                 print("Desired framerate below limit, setting to CAMERA_FRAMERATE_MIN")
@@ -94,6 +105,7 @@ class BlueyeInterface(Node):
             self.drone.camera.is_recording = msg.is_recording
 
             if msg.hue >= self.CAMERA_HUE_MIN and msg.hue <= self.CAMERA_HUE_MAX:
+                print("Hue in range. Setting.")
                 self.drone.camera.hue = msg.hue
             elif msg.hue < self.CAMERA_HUE_MIN:
                 print("Desired hue below limit, setting to CAMERA_HUE_MIN")
@@ -103,8 +115,9 @@ class BlueyeInterface(Node):
                 self.drone.camera.hue = self.CAMERA_HUE_MAX
 
             if (msg.resolution in self.CAMERA_RESOLUTION_VALUES):
+                print("Resolution in range. Setting.")
                 self.drone.camera.resolution = msg.resolution
-                print(msg.resolution)
+                # print(msg.resolution)
             elif (msg.resolution < self.CAMERA_RESOLUTION_VALUES[0]):
                 print(
                     "Desired resolution below limit, setting to CAMERA_RESOLUTION_VALUES_MIN")
@@ -131,12 +144,13 @@ class BlueyeInterface(Node):
                 self.drone.camera.whitebalance = self.CAMERA_WHITEBALANCE_MAX
 
             if (msg.tilt_speed_ref >= self.CAMERA_TILT_SPEED_MIN and msg.tilt_speed_ref <= self.CAMERA_TILT_SPEED_MAX):
+                print("Tilt speed in range. Setting.")
                 self.drone.camera.tilt.set_speed(msg.tilt_speed_ref)
             elif (msg.tilt_speed < self.CAMERA_TILT_SPEED_MIN):
-                print("Desired hue below limit, setting to CAMERA_TILT_SPEED_MIN")
+                print("Desired tilt speed below limit, setting to CAMERA_TILT_SPEED_MIN")
                 self.drone.camera.tilt.set_speed(CAMERA_TILT_SPEED_MIN)
             elif (msg.tilt_speed > self.CAMERA_TILT_SPEED_MAX):
-                print("Desired hue above limit, setting to CAMERA_TILT_SPEED_MAX")
+                print("Desired tilt speed above limit, setting to CAMERA_TILT_SPEED_MAX")
                 self.drone.camera.tilt.set_speed(self.CAMERA_TILT_SPEED_MAX)
         else:
             return
@@ -174,6 +188,10 @@ class BlueyeInterface(Node):
         #self.declare_parameter('camera_tilt_speed', 0)
         self.declare_parameter('camera_tilt_speed_min', -1)
         self.declare_parameter('camera_tilt_speed_max', 1)
+
+        # Lights level params
+        self.declare_parameter('lights_level_min', 0)
+        self.declare_parameter('lights_level_max', 255)
 
     def get_ros_params(self):
         # Setting ROS parameters
@@ -229,6 +247,12 @@ class BlueyeInterface(Node):
         self.CAMERA_TILT_SPEED_MAX = self.get_parameter(
             'camera_tilt_speed_max').get_parameter_value().integer_value
 
+        # Light level params
+        self.LIGHTS_LEVEL_MIN = self.get_parameter(
+            'lights_level_min').get_parameter_value().integer_value
+        self.LIGHTS_LEVEL_MAX = self.get_parameter(
+            'lights_level_max').get_parameter_value().integer_value
+
     def set_blueye_params(self):
         return
 
@@ -251,13 +275,13 @@ class BlueyeInterface(Node):
             msg = Pose()
             msg.position.x = 0.0
             msg.position.y = 0.0
-            msg.position.z = float(self.drone.depth)  # TODO: Check unit
+            # conversion of depth from [mm]to [m]
+            msg.position.z = float(self.drone.depth) / 1000.0
             # Make sure the quaternion is valid and normalized
-            roll = float(list(self.drone.pose.values())[0])  # TODO: Check unit
-            pitch = float(list(self.drone.pose.values())
-                          [1])  # TODO: Check unit
-            yaw = float(list(self.drone.pose.values())[2])  # TODO: Check unit
-            # TODO: Check if drone.pose angles are in rad or degrees
+            # conversion of roll, pith and yaw from [degrees]to [rad]
+            roll = math.radians(float(list(self.drone.pose.values())[0]))
+            pitch = math.radians(float(list(self.drone.pose.values())[1]))
+            yaw = math.radians(float(list(self.drone.pose.values())[2]))
             x, y, z, w = self.euler_to_quaternion(roll, pitch, yaw)
             msg.orientation.x = float(x)
             msg.orientation.y = float(y)
@@ -265,19 +289,20 @@ class BlueyeInterface(Node):
             msg.orientation.w = float(w)
             self.pose_pub.publish(msg)
 
-            # Publish surge, sway, heave and yaw rate velocities as a Twist msg
+            # Publish surge, sway, and heave force setpoints
+            # in range [-1, 1] as a Twist msg
             msg = Twist()
-            msg.linear.x = float(self.drone.motion.surge)  # TODO: Check unit
-            msg.linear.y = float(self.drone.motion.sway)  # TODO: Check unit
-            msg.linear.z = float(self.drone.motion.heave)  # TODO: Check unit
+            msg.linear.x = float(self.drone.motion.surge)
+            msg.linear.y = float(self.drone.motion.sway)
+            msg.linear.z = float(self.drone.motion.heave)
             msg.angular.x = 0.0
             msg.angular.y = 0.0
-            # TODO: Check if drone.motin.yaw is in rad or degrees
+            # yaw rate moment setpoint in range [-1, 1]
             msg.angular.z = float(self.drone.motion.yaw)
             self.velocity_pub.publish(msg)
 
             # Publishing light level as an Int32 msg
-            msg = Int32()  # TODO: Check unit and range
+            msg = Int32()
             msg.data = int(self.drone.lights)
             self.lights_lvl_pub.publish(msg)
 
@@ -297,16 +322,16 @@ class BlueyeInterface(Node):
 
             # Publishing ROV camera parameters
             msg = BlueyeCameraParams()
-            msg.bitrate = self.drone.camera.bitrate  # TODO: Check range
-            msg.exposure = self.drone.camera.exposure  # TODO: Check range
-            msg.frames_per_second = self.drone.camera.framerate  # TODO: Check range
-            msg.is_recording = self.drone.camera.is_recording  # TODO: Check range
-            msg.hue = self.drone.camera.hue  # TODO: Check range
-            msg.recording_time = self.drone.camera.record_time  # TODO: Check range
-            msg.resolution = self.drone.camera.resolution  # TODO: Check range
-            msg.tilt_angle = self.drone.camera.tilt.angle  # TODO: Check range
+            msg.bitrate = self.drone.camera.bitrate
+            msg.exposure = self.drone.camera.exposure
+            msg.frames_per_second = self.drone.camera.framerate
+            msg.is_recording = self.drone.camera.is_recording
+            msg.hue = self.drone.camera.hue
+            msg.recording_time = self.drone.camera.record_time
+            msg.resolution = self.drone.camera.resolution
+            msg.tilt_angle = self.drone.camera.tilt.angle
             msg.tilt_speed_ref = 0
-            msg.whitebalance = self.drone.camera.whitebalance     # TODO: Check range
+            msg.whitebalance = self.drone.camera.whitebalance
             self.camera_params_pub.publish(msg)
         else:
             return
