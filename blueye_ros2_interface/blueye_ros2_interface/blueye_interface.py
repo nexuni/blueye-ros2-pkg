@@ -6,6 +6,7 @@ import rclpy
 from rclpy.node import Node
 
 from std_msgs.msg import Int32
+from std_msgs.msg import Float32
 from std_msgs.msg import String
 from std_msgs.msg import Bool
 from sensor_msgs.msg import Image
@@ -197,6 +198,32 @@ class BlueyeInterface(Node):
         else:
             return
 
+    def boost_gain_ref_callback(self, msg):
+        boost_gain = msg.data
+        if not self.IS_SIMULATION:
+            if (boost_gain >= self.BOOST_GAIN_MIN and boost_gain <= self.BOOST_GAIN_MAX):
+                print("Boost gain in range. Setting.")
+                self.drone.motion.boost = boost_gain
+            elif (boost_gain < self.BOOST_GAIN_MIN):
+                print("Boost gain below range. Setting to BOOST_GAIN_MIN.")
+                self.drone.motion.boost = self.BOOST_GAIN_MIN
+            elif (boost_gain > self.BOOST_GAIN_MAX):
+                print("Boost gain above range. Setting to BOOST_GAIN_MAX.")
+                self.drone.motion.boost = self.BOOST_GAIN_MAX
+
+    def slow_gain_ref_callback(self, msg):
+        slow_gain = msg.data
+        if not self.IS_SIMULATION:
+            if (slow_gain >= self.SLOW_GAIN_MIN and slow_gain <= self.SLOW_GAIN_MAX):
+                print("Slow gain in range. Setting.")
+                self.drone.motion.slow = slow_gain
+            elif (slow_gain < self.SLOW_GAIN_MIN):
+                print("Slow gain below range. Setting to SLOW_GAIN_MIN.")
+                self.drone.motion.slow = self.SLOW_GAIN_MIN
+            elif (slow_gain > self.SLOW_GAIN_MAX):
+                print("Slow gain above range. Setting to SLOW_GAIN_MAX.")
+                self.drone.motion.slow = self.SLOW_GAIN_MAX
+
     def declare_node_parameters(self):
         print("Declaring ROS parameters")
         # ROS params
@@ -236,8 +263,16 @@ class BlueyeInterface(Node):
         self.declare_parameter('lights_level_max', 255)
 
         # Reference force for velocities limits
-        self.declare_parameter('velocity_force_min', -1)
-        self.declare_parameter('velocity_force_max', 1)
+        self.declare_parameter('velocity_force_min', -1.0)
+        self.declare_parameter('velocity_force_max', 1.0)
+
+        # Boost gain limits
+        self.declare_parameter('boost_gain_min', 0.0)
+        self.declare_parameter('boost_gain_max', 1.0)
+
+        # Slow gain limits
+        self.declare_parameter('slow_gain_min', 0.0)
+        self.declare_parameter('slow_gain_max', 1.0)
 
     def get_ros_params(self):
         # Setting ROS parameters
@@ -304,6 +339,18 @@ class BlueyeInterface(Node):
             'velocity_force_min').get_parameter_value().integer_value
         self.VELOCITY_FORCE_MAX = self.get_parameter(
             'velocity_force_max').get_parameter_value().integer_value
+
+        # Boost gain limits
+        self.BOOST_GAIN_MIN = self.get_parameter(
+            'boost_gain_min').get_parameter_value().double_value
+        self.BOOST_GAIN_MAX = self.get_parameter(
+            'boost_gain_max').get_parameter_value().double_value
+
+        # Slow gain limits
+        self.SLOW_GAIN_MIN = self.get_parameter(
+            'slow_gain_min').get_parameter_value().double_value
+        self.SLOW_GAIN_MAX = self.get_parameter(
+            'slow_gain_max').get_parameter_value().double_value
 
     def set_blueye_params(self):
         return
@@ -390,6 +437,17 @@ class BlueyeInterface(Node):
             msg.tilt_speed_ref = 0
             msg.whitebalance = self.drone.camera.whitebalance
             self.camera_params_pub.publish(msg)
+
+            # Publishing boost gain
+            msg = Float32()
+            msg.data = float(self.drone.motion.boost)
+            self.boost_gain_pub.publish(msg)
+
+            # Publishing slow gain
+            msg = Float32()
+            msg.data = float(self.drone.motion.slow)
+            self.slow_gain_pub.publish(msg)
+
         else:
             return
 
@@ -420,6 +478,10 @@ class BlueyeInterface(Node):
             Int32, "auto_mode_ref", self.auto_mode_ref_callback, 10)
         self.create_subscription(
             BlueyeCameraParams, "camera_params_ref", self.camera_params_ref_callback, 10)
+        self.create_subscription(
+            Float32, "boost_gain_ref", self.boost_gain_ref_callback, 10)
+        self.create_subscription(
+            Float32, "slow_gain_ref", self.slow_gain_ref_callback, 10)
 
     def initialize_publishers(self):
         print("Initializing ROS publishers")
@@ -437,6 +499,10 @@ class BlueyeInterface(Node):
             BlueyeCameraParams, "camera_params", 10)
         self.battery_percentage_pub = self.create_publisher(
             Int32, "battery_percentage", 10)
+        self.boost_gain_pub = self.create_publisher(
+            Float32, "boost_gain", 10)
+        self.slow_gain_pub = self.create_publisher(
+            Float32, "slow_gain", 10)
 
     def initialize_blueye_connection(self):
         print("Initializing Blueye connection")

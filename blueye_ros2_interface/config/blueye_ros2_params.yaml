@@ -6,7 +6,7 @@ blueye: # namespace
       is_simulation: False
       
       # Blueye ROV-related params
-      # Camera params 
+      ## Camera params 
       #camera_bitrate: 6000000 # type: integer, range:1 000 000 - 16 000 000, unit: bits
       camera_bitrate_min: 1000000 
       camera_bitrate_max: 16000000 
@@ -40,13 +40,21 @@ blueye: # namespace
       camera_tilt_speed_min: -1
       camera_tilt_speed_max: 1
       
-      # Lights level limits
+      ## Lights level limits, type: int, range: [0, 255], unit: []
       lights_level_min: 0
       lights_level_max: 255
       
-      # Velocities forces limits, float
+      ## Velocities forces limits: type: float, range: [-1, 1], unit: []
       velocity_force_min: -1
       velocity_force_max: 1
+      
+      ## Boost gain limits: type: float, range: [0, 1], unit: []
+      boost_gain_min: 0.0
+      boost_gain_max: 1.0
+      
+      ## Slow gain limits: type: float, range: [0, 1], unit: []
+      slow_gain_min: 0.0
+      slow_gain_max: 1.0
       
             
       
