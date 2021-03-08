@@ -20,7 +20,7 @@ import sys
 
 class BlueyeInterface(Node):
 
-    def thruster_force_norm_ref_callback(self, msg):	
+    def thruster_force_norm_ref_callback(self, msg):
         surge_val = msg.linear.x
         sway_val = msg.linear.y
         heave_val = msg.linear.z
@@ -223,6 +223,19 @@ class BlueyeInterface(Node):
                 print("Slow gain above range. Setting to SLOW_GAIN_MAX.")
                 self.drone.motion.slow = self.SLOW_GAIN_MAX
 
+    def water_density_ref_callback(self, msg):
+        water_density = msg.data
+        if not self.IS_SIMULATION:
+            if water_density >= self.WATER_DENSITY_MIN and water_density <= self.WATER_DENSITY_MAX:
+                print("Water density in range. Setting.")
+                self.drone.config.water_density = water_density
+            elif water_density < self.WATER_DENSITY_MIN:
+                print("Water density below range. Setting to WATER_DENSITY_MIN.")
+                self.drone.config.water_density = self.WATER_DENSITY_MIN
+            elif water_density > self.WATER_DENSITY_MAX:
+                print("Water density above range. Setting to WATER_DENSITY_MAX.")
+                self.drone.config.water_density = self.WATER_DENSITY_MAX
+
     def declare_node_parameters(self):
         print("Declaring ROS parameters")
         # ROS params
@@ -272,6 +285,10 @@ class BlueyeInterface(Node):
         # Slow gain limits
         self.declare_parameter('slow_gain_min', 0.0)
         self.declare_parameter('slow_gain_max', 1.0)
+
+        # Water density limits
+        self.declare_parameter('water_density_min', 997)
+        self.declare_parameter('water_density_max', 1240)
 
     def get_ros_params(self):
         # Setting ROS parameters
@@ -350,6 +367,12 @@ class BlueyeInterface(Node):
             'slow_gain_min').get_parameter_value().double_value
         self.SLOW_GAIN_MAX = self.get_parameter(
             'slow_gain_max').get_parameter_value().double_value
+
+        # Water density limits
+        self.WATER_DENSITY_MIN = self.get_parameter(
+            'water_density_min').get_parameter_value().integer_value
+        self.WATER_DENSITY_MAX = self.get_parameter(
+            'water_density_max').get_parameter_value().integer_value
 
     def set_blueye_params(self):
         return
@@ -447,6 +470,11 @@ class BlueyeInterface(Node):
             msg.data = float(self.drone.motion.slow)
             self.slow_gain_pub.publish(msg)
 
+            # Publishing water density
+            msg = Int32()
+            msg.data = int(self.drone.config.water_density)
+            self.water_density_pub.publish(msg)
+
         else:
             return
 
@@ -481,6 +509,8 @@ class BlueyeInterface(Node):
             Float32, "boost_gain_ref", self.boost_gain_ref_callback, 10)
         self.create_subscription(
             Float32, "slow_gain_ref", self.slow_gain_ref_callback, 10)
+        self.create_subscription(
+            Int32, "water_density_ref", self.water_density_ref_callback, 10)
 
     def initialize_publishers(self):
         print("Initializing ROS publishers")
@@ -502,6 +532,8 @@ class BlueyeInterface(Node):
             Float32, "boost_gain", 10)
         self.slow_gain_pub = self.create_publisher(
             Float32, "slow_gain", 10)
+        self.water_density_pub = self.create_publisher(
+            Int32, "water_density", 10)
 
     def initialize_blueye_connection(self):
         print("Initializing Blueye connection")

@@ -56,6 +56,15 @@ blueye: # namespace
       slow_gain_min: 0.0
       slow_gain_max: 1.0
       
+      ## Water densities: type: integer, unit: [grams/liter]
+      ### fresh_water = 1000 g/l, Dead Sea = 1240 g/l
+      density_fresh: 997
+      density_brackish: 1011
+      density_salty: 1025
+      water_density_values: [ 997, 1011, 1025 ]
+      water_density_min: 997
+      water_density_max: 1240
+      
             
       
        # type: , range: , unit: 
