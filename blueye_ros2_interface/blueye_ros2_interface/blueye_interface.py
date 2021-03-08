@@ -480,6 +480,11 @@ class BlueyeInterface(Node):
             msg.data = self.drone.logs.ip
             self.ip_address_pub.publish(msg)
 
+            # Publish ROV's software version
+            msg = String()
+            msg.data = self.drone.software_version
+            self.software_version_pub.publish(msg)
+
         else:
             return
 
@@ -541,6 +546,8 @@ class BlueyeInterface(Node):
             Int32, "water_density", 10)
         self.ip_address_pub = self.create_publisher(
             String, "ip_address", 10)
+        self.software_version_pub = self.create_publisher(
+            String, "software_version", 10)
 
     def initialize_blueye_connection(self):
         print("Initializing Blueye connection")
