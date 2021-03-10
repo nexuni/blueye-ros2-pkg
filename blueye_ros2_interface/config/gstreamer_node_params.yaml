@@ -1,0 +1,24 @@
+blueye:
+  gstreamer_node:
+    ros__parameters:
+      #gscam_config: 'rtspsrc location=rtsp://192.168.1.101:8554/test latency=0 ! rtph264depay ! avdec_h264 ! videoconvert ! fpsdisplaysink sync=false'
+      #preroll: False # was True
+      #use_gst_timestamps: True
+      #camera_name: 'blueye_camera'
+      #frame_id: 'blueye_camera_frame'
+      
+      #gscam_config: 'rtspsrc device=/dev/video0 do-timestamp=true ! queue ! video/x-h264,width=1920,height=1080,framerate=30 ! h264parse ! avdec_h264 ! videoconvert'
+      
+      #gscam_config: 'rtspsrc location=rtsp://192.168.1.101:8554/test do-timestamp=true ! queue ! video/x-h264,width=1920,height=1080,framerate=30 ! h264parse ! avdec_h264 ! videoconvert'
+
+      gscam_config: 'rtspsrc location=rtsp://192.168.1.101:8554/test latency=0 
+      ! rtph264depay 
+      ! avdec_h264 
+      ! videoconvert '
+
+
+
+      preroll: False
+      use_gst_timestamps: True
+      camera_name: 'my_camera'
+      frame_id: 'my_camera_frame'
