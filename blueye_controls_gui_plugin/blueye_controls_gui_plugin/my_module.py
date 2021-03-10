@@ -85,11 +85,13 @@ class MyPlugin(Plugin):
         self.tilt_speed_ref = 0
         self.whitebalance = -1
         
-        self.lights_lvl = 0
+        self.lights = 0
         self.water_density = 1025
-        self.boost_gain = 0.5
+        self.boost = 0.5
         
         self.publish_camera_params()
+        self.publish_lights()
+        self.publish_boost()
 
         # Find exposure_feature-related blocks and connect their signals with callbacks
         self.exposureCheckBox = self._widget.findChild(
@@ -120,18 +122,49 @@ class MyPlugin(Plugin):
             self.whiteBalanceSliderValueChanged)  
 
         # Find hue_feature-related blocks and connect their signals with callbacks
+        self.hueSliderValueLabel = self._widget.findChild(
+            QLabel, 'hueSliderValueLabel')
+            
+        self.hueSlider= self._widget.findChild(
+            QSlider, 'hueSlider')
+        self.hueSlider.valueChanged.connect(
+            self.hueSliderValueChanged) 
 
         # Find bitrate_feature-related blocks and connect their signals with callbacks
+        self.bitrateSliderValueLabel = self._widget.findChild(
+            QLabel, 'bitrateSliderValueLabel')
+            
+        self.bitrateSlider= self._widget.findChild(
+            QSlider, 'bitrateSlider')
+        self.bitrateSlider.valueChanged.connect(
+            self.bitrateSliderValueChanged)
 
         # Find framerate_feature-related blocks and connect their signals with callbacks
 
         # Find resolution_feature-related blocks and connect their signals with callbacks
 
         # Find lights_feature-related blocks and connect their signals with callbacks
+        self.lightsSliderValueLabel = self._widget.findChild(
+            QLabel, 'lightsSliderValueLabel')
+            
+        self.lightsSlider= self._widget.findChild(
+            QSlider, 'lightsSlider')
+        self.lightsSlider.valueChanged.connect(
+            self.lightsSliderValueChanged)
+
 
         # Find water_density_feature-related blocks and connect their signals with callbacks
 
         # Find boost_feature-related blocks and connect their signals with callbacks
+        self.boostSliderValueLabel = self._widget.findChild(
+            QLabel, 'boostSliderValueLabel')
+            
+        self.boostSlider= self._widget.findChild(
+            QSlider, 'boostSlider')
+        self.boostSlider.valueChanged.connect(
+            self.boostSliderValueChanged)
+
+
 
     def initialize_subscribers(self):
         print("Initializing ROS subscribers")
@@ -200,7 +233,18 @@ class MyPlugin(Plugin):
         self.camera_params_pub = self.node.create_publisher(
            BlueyeCameraParams, "camera_params_ref", 10)
         
-        return 0
+        self.lights_pub = self.node.create_publisher(
+            Int32, "lights_lvl_ref", 10)
+        
+        self.boost_pub = self.node.create_publisher(
+            Float32, "boost_gain_ref", 10)
+            
+        """ self.create_subscription(
+            Int32, "auto_mode_ref", self.auto_mode_ref_callback, 10)
+       
+            Int32, "water_density_ref", self.water_density_ref_callback, 10)
+        """
+        
 
     def publish_camera_params(self):
         msg = BlueyeCameraParams()
@@ -215,6 +259,16 @@ class MyPlugin(Plugin):
         msg.tilt_speed_ref = self.tilt_speed_ref
         msg.whitebalance = self.whitebalance
         self.camera_params_pub.publish(msg)
+        
+    def publish_lights(self):
+        msg = Int32()
+        msg.data = self.lights
+        self.lights_pub.publish(msg)
+    
+    def publish_boost(self):
+        msg = Float32()
+        msg.data = self.boost
+        self.boost_pub.publish(msg)
         
     
     def exposureCheckBoxStateChanged(self):
@@ -254,13 +308,38 @@ class MyPlugin(Plugin):
             self.whiteBalanceSliderValueLabel.setText(string)
             self.publish_camera_params()             
                    
-            
     def whiteBalanceSliderValueChanged(self):        
         if not self.whitebalance_auto:
             self.whitebalance = self.whiteBalanceSlider.value()
             string = str(self.whitebalance) + ' K'
             self.whiteBalanceSliderValueLabel.setText(string) 
-            self.publish_camera_params()    
+            self.publish_camera_params()
+    
+    def hueSliderValueChanged(self):  
+        self.hue = self.hueSlider.value()
+        string = str(self.hue) 
+        self.hueSliderValueLabel.setText(string) 
+        self.publish_camera_params()
+        
+    def bitrateSliderValueChanged(self):  
+        self.bitrate = self.bitrateSlider.value()*1000000
+        string = str(self.bitrate/1000000) + ' Mbps' 
+        self.bitrateSliderValueLabel.setText(string) 
+        self.publish_camera_params()
+    
+    def lightsSliderValueChanged(self):  
+        self.lights = self.lightsSlider.value()
+        string = str(round(self.lights/255*100, 2)) + '%' 
+        self.lightsSliderValueLabel.setText(string) 
+        self.publish_lights()
+    
+    def boostSliderValueChanged(self):  
+        self.boost = self.boostSlider.value()/100.0
+        string = str(round(self.boost*100, 2)) + '%' 
+        self.boostSliderValueLabel.setText(string) 
+        self.publish_boost()
+    
+    
     
     def shutdown_plugin(self):
         # TODO unregister all publishers here
