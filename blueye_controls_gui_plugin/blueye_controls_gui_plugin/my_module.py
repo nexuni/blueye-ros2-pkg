@@ -64,13 +64,12 @@ class MyPlugin(Plugin):
         context.add_widget(self._widget)
 
         # Start ROS2 node, publishers and subscribers
-        ##super().__init__('blueye_controls_gui_plugin')
-        #rclpy.init()
+        # super().__init__('blueye_controls_gui_plugin')
+        # rclpy.init()
         self.node = rclpy.create_node('blueye_controls_gui_node')
         self.initialize_publishers()
         self.initialize_subscribers()
-        
-        
+
         # Set all controls from GUI to their default values
         self.exposure_auto = True
         self.whitebalance_auto = True
@@ -79,92 +78,101 @@ class MyPlugin(Plugin):
         self.framerate = 25
         self.is_recording = False
         self.hue = 0
-        self.recording_time = -1 
+        self.recording_time = -1
         self.resolution = 1080
         self.tilt_angle = 0.0
         self.tilt_speed_ref = 0
         self.whitebalance = -1
-        
+
         self.lights = 0
         self.water_density = 1025
         self.boost = 0.5
-        
-        self.publish_camera_params()
-        self.publish_lights()
-        self.publish_boost()
+
+        self.publish_camera_params_ref()
+        self.publish_lights_ref()
+        self.publish_boost_ref()
 
         # Find exposure_feature-related blocks and connect their signals with callbacks
         self.exposureCheckBox = self._widget.findChild(
             QCheckBox, 'exposureEnableCheckBox')
         self.exposureCheckBox.stateChanged.connect(
             self.exposureCheckBoxStateChanged)
-            
+
         self.exposureSliderValueLabel = self._widget.findChild(
             QLabel, 'exposureSliderValueLabel')
-            
-        self.exposureSlider= self._widget.findChild(
+
+        self.exposureSlider = self._widget.findChild(
             QSlider, 'exposureSlider')
         self.exposureSlider.valueChanged.connect(
-            self.exposureSliderValueChanged)    
+            self.exposureSliderValueChanged)
 
         # Find white_balance_feature-related blocks and connect their signals with callbacks
         self.whiteBalanceCheckBox = self._widget.findChild(
             QCheckBox, 'whiteBalanceEnableCheckBox')
         self.whiteBalanceCheckBox.stateChanged.connect(
             self.whiteBalanceCheckBoxStateChanged)
-            
+
         self.whiteBalanceSliderValueLabel = self._widget.findChild(
             QLabel, 'whiteBalanceSliderValueLabel')
-            
-        self.whiteBalanceSlider= self._widget.findChild(
+
+        self.whiteBalanceSlider = self._widget.findChild(
             QSlider, 'whiteBalanceSlider')
         self.whiteBalanceSlider.valueChanged.connect(
-            self.whiteBalanceSliderValueChanged)  
+            self.whiteBalanceSliderValueChanged)
 
         # Find hue_feature-related blocks and connect their signals with callbacks
         self.hueSliderValueLabel = self._widget.findChild(
             QLabel, 'hueSliderValueLabel')
-            
-        self.hueSlider= self._widget.findChild(
+
+        self.hueSlider = self._widget.findChild(
             QSlider, 'hueSlider')
         self.hueSlider.valueChanged.connect(
-            self.hueSliderValueChanged) 
+            self.hueSliderValueChanged)
 
         # Find bitrate_feature-related blocks and connect their signals with callbacks
         self.bitrateSliderValueLabel = self._widget.findChild(
             QLabel, 'bitrateSliderValueLabel')
-            
-        self.bitrateSlider= self._widget.findChild(
+
+        self.bitrateSlider = self._widget.findChild(
             QSlider, 'bitrateSlider')
         self.bitrateSlider.valueChanged.connect(
             self.bitrateSliderValueChanged)
 
         # Find framerate_feature-related blocks and connect their signals with callbacks
+        self.framerateComboBox = self._widget.findChild(
+            QComboBox, 'framerateComboBox')
+        self.framerateComboBox.currentTextChanged.connect(
+            self.framerateComboBoxCurrentTextChanged)
 
         # Find resolution_feature-related blocks and connect their signals with callbacks
+        self.resolutionComboBox = self._widget.findChild(
+            QComboBox, 'resolutionComboBox')
+        self.resolutionComboBox.currentTextChanged.connect(
+            self.resolutionComboBoxCurrentTextChanged)
 
         # Find lights_feature-related blocks and connect their signals with callbacks
         self.lightsSliderValueLabel = self._widget.findChild(
             QLabel, 'lightsSliderValueLabel')
-            
-        self.lightsSlider= self._widget.findChild(
+
+        self.lightsSlider = self._widget.findChild(
             QSlider, 'lightsSlider')
         self.lightsSlider.valueChanged.connect(
             self.lightsSliderValueChanged)
 
-
         # Find water_density_feature-related blocks and connect their signals with callbacks
+        self.waterDensityComboBox = self._widget.findChild(
+            QComboBox, 'waterDensityComboBox')
+        self.waterDensityComboBox.currentTextChanged.connect(
+            self.waterDensityComboBoxCurrentTextChanged)
 
         # Find boost_feature-related blocks and connect their signals with callbacks
         self.boostSliderValueLabel = self._widget.findChild(
             QLabel, 'boostSliderValueLabel')
-            
-        self.boostSlider= self._widget.findChild(
+
+        self.boostSlider = self._widget.findChild(
             QSlider, 'boostSlider')
         self.boostSlider.valueChanged.connect(
             self.boostSliderValueChanged)
-
-
 
     def initialize_subscribers(self):
         print("Initializing ROS subscribers")
@@ -186,10 +194,10 @@ class MyPlugin(Plugin):
 
         self.create_subscription(Int32, "battery_percentage",
                                  self.battery_percentage_callback, 10) """
-                                 
+
         self.node.create_subscription(
             BlueyeCameraParams, "camera_params", self.camera_params_callback, 10)
-    
+
     def camera_params_callback(self, msg):
         """msg = BlueyeCameraParams()
         self.bitrate = int(msg.bitrate/1000000) 
@@ -202,7 +210,7 @@ class MyPlugin(Plugin):
         self.tilt_angle = msg.tilt_angle
         self.tilt_speed_ref = msg.tilt_speed_ref
         self.whitebalance = msg.whitebalance"""
-        return 
+        return
 
     def initialize_publishers(self):
         print("Initializing ROS publishers")
@@ -229,24 +237,24 @@ class MyPlugin(Plugin):
             String, "ip_address", 10)
         self.software_version_pub = self.create_publisher(
             String, "software_version", 10) """
-            
+
         self.camera_params_pub = self.node.create_publisher(
-           BlueyeCameraParams, "camera_params_ref", 10)
-        
+            BlueyeCameraParams, "camera_params_ref", 10)
+
         self.lights_pub = self.node.create_publisher(
             Int32, "lights_lvl_ref", 10)
-        
+
         self.boost_pub = self.node.create_publisher(
             Float32, "boost_gain_ref", 10)
             
-        """ self.create_subscription(
-            Int32, "auto_mode_ref", self.auto_mode_ref_callback, 10)
-       
-            Int32, "water_density_ref", self.water_density_ref_callback, 10)
-        """
+        self.water_density_pub = self.node.create_publisher(
+            Int32, "water_density_ref", 10)
         
+        self.auto_mode_pub = self.node.create_publisher(
+            Int32, "auto_mode_ref", 10)
 
-    def publish_camera_params(self):
+
+    def publish_camera_params_ref(self):
         msg = BlueyeCameraParams()
         msg.bitrate = self.bitrate
         msg.exposure = self.exposure
@@ -259,88 +267,119 @@ class MyPlugin(Plugin):
         msg.tilt_speed_ref = self.tilt_speed_ref
         msg.whitebalance = self.whitebalance
         self.camera_params_pub.publish(msg)
-        
-    def publish_lights(self):
+
+    def publish_lights_ref(self):
         msg = Int32()
         msg.data = self.lights
         self.lights_pub.publish(msg)
-    
-    def publish_boost(self):
+
+    def publish_water_density_ref(self):
+        msg = Int32()
+        msg.data = self.water_density
+        self.water_density_pub.publish(msg)
+
+    def publish_boost_ref(self):
         msg = Float32()
         msg.data = self.boost
         self.boost_pub.publish(msg)
-        
-    
+
     def exposureCheckBoxStateChanged(self):
-        self.exposure_auto = (not self.exposureCheckBox.checkState() )
+        self.exposure_auto = (not self.exposureCheckBox.checkState())
         if self.exposure_auto:
             self.exposure = -1
             self.exposureSliderValueLabel.setText("Auto")
             self.exposureSlider.setEnabled(False)
-            
+
         else:
             self.exposureSlider.setEnabled(True)
             self.exposure = self.exposureSlider.value()
             string = str(self.exposure) + '/1000 s'
-            self.exposureSliderValueLabel.setText(string) 
-            
-        self.publish_camera_params()           
-            
-    def exposureSliderValueChanged(self):        
+            self.exposureSliderValueLabel.setText(string)
+
+        self.publish_camera_params_ref()
+
+    def exposureSliderValueChanged(self):
         if not self.exposure_auto:
             self.exposure = self.exposureSlider.value()
             string = str(self.exposure) + '/1000 s'
-            self.exposureSliderValueLabel.setText(string) 
-            self.publish_camera_params()            
+            self.exposureSliderValueLabel.setText(string)
+            self.publish_camera_params_ref()
 
     def whiteBalanceCheckBoxStateChanged(self):
-        self.whitebalance_auto = (not self.whiteBalanceCheckBox.checkState() )
+        self.whitebalance_auto = (not self.whiteBalanceCheckBox.checkState())
         print("WB auto " + str(self.whitebalance_auto))
         if self.whitebalance_auto:
             self.whitebalance = -1
             self.whiteBalanceSliderValueLabel.setText("Auto")
             self.whiteBalanceSlider.setEnabled(False)
-            self.publish_camera_params()            
+            self.publish_camera_params_ref()
         else:
             self.whiteBalanceSlider.setEnabled(True)
             self.whitebalance = self.whiteBalanceSlider.value()
             string = str(self.whitebalance) + ' K'
             self.whiteBalanceSliderValueLabel.setText(string)
-            self.publish_camera_params()             
-                   
-    def whiteBalanceSliderValueChanged(self):        
+            self.publish_camera_params_ref()
+
+    def whiteBalanceSliderValueChanged(self):
         if not self.whitebalance_auto:
             self.whitebalance = self.whiteBalanceSlider.value()
             string = str(self.whitebalance) + ' K'
-            self.whiteBalanceSliderValueLabel.setText(string) 
-            self.publish_camera_params()
-    
-    def hueSliderValueChanged(self):  
+            self.whiteBalanceSliderValueLabel.setText(string)
+            self.publish_camera_params_ref()
+
+    def hueSliderValueChanged(self):
         self.hue = self.hueSlider.value()
-        string = str(self.hue) 
-        self.hueSliderValueLabel.setText(string) 
-        self.publish_camera_params()
-        
-    def bitrateSliderValueChanged(self):  
+        string = str(self.hue)
+        self.hueSliderValueLabel.setText(string)
+        self.publish_camera_params_ref()
+
+    def bitrateSliderValueChanged(self):
         self.bitrate = self.bitrateSlider.value()*1000000
-        string = str(self.bitrate/1000000) + ' Mbps' 
-        self.bitrateSliderValueLabel.setText(string) 
-        self.publish_camera_params()
+        string = str(self.bitrate/1000000) + ' Mbps'
+        self.bitrateSliderValueLabel.setText(string)
+        self.publish_camera_params_ref()
+
+    def framerateComboBoxCurrentTextChanged(self):
+        chosen_option = self.framerateComboBox.currentText()
+        if chosen_option == '25 fps':
+            self.framerate = 25
+        elif chosen_option == '30 fps':
+            self.framerate = 30
+        self.publish_camera_params_ref()
     
-    def lightsSliderValueChanged(self):  
+    def resolutionComboBoxCurrentTextChanged(self):
+        chosen_option = self.resolutionComboBox.currentText()
+        if chosen_option == '720p':
+            self.resolution = 720
+        elif chosen_option == '1080p':
+            self.resolution = 1080
+        self.publish_camera_params_ref()
+    
+    def waterDensityComboBoxCurrentTextChanged(self):
+        chosen_option = self.waterDensityComboBox.currentText()
+        print(str(chosen_option))
+        if chosen_option == "Salty - 1025 g/l":
+            self.water_density = 1025
+        elif chosen_option == "Freshwater - 997g/l":
+            self.water_density = 997
+        elif chosen_option == "Brackish - 1011 g/l":
+            self.water_density = 1011
+        else:
+            self.water_density = int(round(float(chosen_option)))
+        self.publish_water_density_ref()
+
+    def lightsSliderValueChanged(self):
         self.lights = self.lightsSlider.value()
-        string = str(round(self.lights/255*100, 2)) + '%' 
-        self.lightsSliderValueLabel.setText(string) 
-        self.publish_lights()
-    
-    def boostSliderValueChanged(self):  
+        string = str(round(self.lights/255*100, 2)) + '%'
+        self.lightsSliderValueLabel.setText(string)
+        self.publish_lights_ref()
+
+    def boostSliderValueChanged(self):
         self.boost = self.boostSlider.value()/100.0
-        string = str(round(self.boost*100, 2)) + '%' 
-        self.boostSliderValueLabel.setText(string) 
-        self.publish_boost()
-    
-    
-    
+        string = str(round(self.boost*100, 2)) + '%'
+        self.boostSliderValueLabel.setText(string)
+        self.publish_boost_ref()
+
     def shutdown_plugin(self):
         # TODO unregister all publishers here
         pass
