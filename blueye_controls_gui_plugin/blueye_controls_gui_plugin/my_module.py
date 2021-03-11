@@ -64,6 +64,19 @@ class MyPlugin(Plugin):
         context.add_widget(self._widget)
 
         # Set all controls from GUI to their default values
+        # Initialize all MyPlugin class properties
+        self.initialize_class_properties()
+
+        # Start ROS2 node, publishers and subscribers
+        # super().__init__('blueye_controls_gui_plugin')
+        # rclpy.init()
+        self.node = context.node
+        self.initialize_ros_stuff()
+
+        # Instantiate UI elements from the loaded .ui file
+        self.initantiate_ui_elements()
+
+    def initialize_class_properties(self):
         self.battery_lvl = 50
         self.auto_depth_mode = 0
         self.auto_heading_mode = 0
@@ -85,20 +98,19 @@ class MyPlugin(Plugin):
         self.water_density = 1025
         self.boost = 0.5
 
-        # Start ROS2 node, publishers and subscribers
-        # super().__init__('blueye_controls_gui_plugin')
-        # rclpy.init()
-        self.node = rclpy.create_node('blueye_controls_gui_node')
+    def initialize_ros_stuff(self):
+        #self.node = rclpy.create_node('blueye_controls_gui_node')
         self.RATE = 10  # Hz
         self.initialize_publishers()
         self.initialize_subscribers()
-        self.initialize_timer()  # ???
+        #self.initialize_timer()  # ???
         self.publish_camera_params_ref()
         self.publish_lights_ref()
         self.publish_boost_ref()
         self.publish_water_density_ref()
         self.publish_auto_mode_ref()
 
+    def initantiate_ui_elements(self):
         # Find battery level QLabel
         self.batteryLevelLabel = self._widget.findChild(
             QLabel, 'batteryLevelLabel')
@@ -197,19 +209,6 @@ class MyPlugin(Plugin):
         self.boostSlider.valueChanged.connect(
             self.boostSliderValueChanged)
 
-        # rclpy.spin(self.node)
-
-    def initialize_timer(self):
-        print("Initializing timer")
-        self.timer_period = 1.0/self.RATE
-        self.timer = self.node.create_timer(
-            self.timer_period, self.timer_callback)
-
-    def timer_callback(self):
-        print("In timer callback")
-        self.node.spin_once()
-        # return
-
     def initialize_subscribers(self):
         print("Initializing ROS subscribers")
         """# Initialize ROS subscribers to ROV variables' reference - ROV set topics
@@ -231,7 +230,7 @@ class MyPlugin(Plugin):
 
         self.node.create_subscription(Int32, "battery_percentage",
                                       self.battery_percentage_callback, 10)
-
+        
         # self.node.create_subscription(
         #    BlueyeCameraParams, "camera_params", self.camera_params_callback, 10)
 
