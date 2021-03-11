@@ -63,18 +63,11 @@ class MyPlugin(Plugin):
         # Add widget to the user interface
         context.add_widget(self._widget)
 
-        # Start ROS2 node, publishers and subscribers
-        # super().__init__('blueye_controls_gui_plugin')
-        # rclpy.init()
-        self.node = rclpy.create_node('blueye_controls_gui_node')
-        self.initialize_publishers()
-        self.initialize_subscribers()
-
         # Set all controls from GUI to their default values
         self.battery_lvl = 50
         self.auto_depth_mode = 0
         self.auto_heading_mode = 0
-        
+
         self.exposure_auto = True
         self.whitebalance_auto = True
         self.bitrate = 8000000
@@ -91,23 +84,36 @@ class MyPlugin(Plugin):
         self.lights = 0
         self.water_density = 1025
         self.boost = 0.5
-        
-        
-        
 
+        # Start ROS2 node, publishers and subscribers
+        # super().__init__('blueye_controls_gui_plugin')
+        # rclpy.init()
+        self.node = rclpy.create_node('blueye_controls_gui_node')
+        self.RATE = 10  # Hz
+        self.initialize_publishers()
+        self.initialize_subscribers()
+        self.initialize_timer()  # ???
         self.publish_camera_params_ref()
         self.publish_lights_ref()
         self.publish_boost_ref()
         self.publish_water_density_ref()
-        self.publish_auto_mode_ref()        
-        
-        # Find auto depth and heading modes QPushBUttons and connect 
-        #their Clicked signal with callbacks   
-        self.autoDepthModeButton = self._widget.findChild(QPushButton, 'autoDepthModeButton')
-        self.autoDepthModeButton.clicked.connect(self.autoDepthModeButtonClicked)
+        self.publish_auto_mode_ref()
 
-        self.autoHeadingModeButton = self._widget.findChild(QPushButton, 'autoHeadingModeButton')
-        self.autoHeadingModeButton.clicked.connect(self.autoHeadingModeButtonClicked)
+        # Find battery level QLabel
+        self.batteryLevelLabel = self._widget.findChild(
+            QLabel, 'batteryLevelLabel')
+
+        # Find auto depth and heading modes QPushBUttons and connect
+        # their Clicked signal with callbacks
+        self.autoDepthModeButton = self._widget.findChild(
+            QPushButton, 'autoDepthModeButton')
+        self.autoDepthModeButton.clicked.connect(
+            self.autoDepthModeButtonClicked)
+
+        self.autoHeadingModeButton = self._widget.findChild(
+            QPushButton, 'autoHeadingModeButton')
+        self.autoHeadingModeButton.clicked.connect(
+            self.autoHeadingModeButtonClicked)
 
         # Find exposure_feature-related blocks and connect their signals with callbacks
         self.exposureCheckBox = self._widget.findChild(
@@ -191,6 +197,19 @@ class MyPlugin(Plugin):
         self.boostSlider.valueChanged.connect(
             self.boostSliderValueChanged)
 
+        # rclpy.spin(self.node)
+
+    def initialize_timer(self):
+        print("Initializing timer")
+        self.timer_period = 1.0/self.RATE
+        self.timer = self.node.create_timer(
+            self.timer_period, self.timer_callback)
+
+    def timer_callback(self):
+        print("In timer callback")
+        self.node.spin_once()
+        # return
+
     def initialize_subscribers(self):
         print("Initializing ROS subscribers")
         """# Initialize ROS subscribers to ROV variables' reference - ROV set topics
@@ -211,9 +230,9 @@ class MyPlugin(Plugin):
         """
 
         self.node.create_subscription(Int32, "battery_percentage",
-                                 self.battery_percentage_callback, 10) 
+                                      self.battery_percentage_callback, 10)
 
-        #self.node.create_subscription(
+        # self.node.create_subscription(
         #    BlueyeCameraParams, "camera_params", self.camera_params_callback, 10)
 
     def camera_params_callback(self, msg):
@@ -232,7 +251,6 @@ class MyPlugin(Plugin):
 
     def battery_percentage_callback(self, msg):
         self.battery_lvl = msg.data
-        print(str(msg.data))
         string = str(self.battery_lvl) + '%'
         self.batteryLevelLabel.setText(string)
 
@@ -270,13 +288,13 @@ class MyPlugin(Plugin):
 
         self.boost_pub = self.node.create_publisher(
             Float32, "boost_gain_ref", 10)
-            
+
         self.water_density_pub = self.node.create_publisher(
             Int32, "water_density_ref", 10)
-        
+
         self.auto_mode_pub = self.node.create_publisher(
             Int32, "auto_mode_ref", 10)
-            
+
     def publish_auto_mode_ref(self):
         msg = Int32()
         msg.data = 2*self.auto_depth_mode + self.auto_heading_mode
@@ -318,7 +336,7 @@ class MyPlugin(Plugin):
         elif self.auto_depth_mode == 1:
             self.auto_depth_mode = 0
         self.publish_auto_mode_ref()
-        
+
     def autoHeadingModeButtonClicked(self):
         if self.auto_heading_mode == 0:
             self.auto_heading_mode = 1
@@ -389,7 +407,7 @@ class MyPlugin(Plugin):
         elif chosen_option == '30 fps':
             self.framerate = 30
         self.publish_camera_params_ref()
-    
+
     def resolutionComboBoxCurrentTextChanged(self):
         chosen_option = self.resolutionComboBox.currentText()
         if chosen_option == '720p':
@@ -397,7 +415,7 @@ class MyPlugin(Plugin):
         elif chosen_option == '1080p':
             self.resolution = 1080
         self.publish_camera_params_ref()
-    
+
     def waterDensityComboBoxCurrentTextChanged(self):
         chosen_option = self.waterDensityComboBox.currentText()
         print(str(chosen_option))
