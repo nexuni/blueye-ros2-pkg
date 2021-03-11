@@ -71,6 +71,10 @@ class MyPlugin(Plugin):
         self.initialize_subscribers()
 
         # Set all controls from GUI to their default values
+        self.battery_lvl = 50
+        self.auto_depth_mode = 0
+        self.auto_heading_mode = 0
+        
         self.exposure_auto = True
         self.whitebalance_auto = True
         self.bitrate = 8000000
@@ -87,10 +91,23 @@ class MyPlugin(Plugin):
         self.lights = 0
         self.water_density = 1025
         self.boost = 0.5
+        
+        
+        
 
         self.publish_camera_params_ref()
         self.publish_lights_ref()
         self.publish_boost_ref()
+        self.publish_water_density_ref()
+        self.publish_auto_mode_ref()        
+        
+        # Find auto depth and heading modes QPushBUttons and connect 
+        #their Clicked signal with callbacks   
+        self.autoDepthModeButton = self._widget.findChild(QPushButton, 'autoDepthModeButton')
+        self.autoDepthModeButton.clicked.connect(self.autoDepthModeButtonClicked)
+
+        self.autoHeadingModeButton = self._widget.findChild(QPushButton, 'autoHeadingModeButton')
+        self.autoHeadingModeButton.clicked.connect(self.autoHeadingModeButtonClicked)
 
         # Find exposure_feature-related blocks and connect their signals with callbacks
         self.exposureCheckBox = self._widget.findChild(
@@ -191,12 +208,13 @@ class MyPlugin(Plugin):
             Float32, "slow_gain_ref", self.slow_gain_ref_callback, 10)
         self.create_subscription(
             Int32, "water_density_ref", self.water_density_ref_callback, 10)
+        """
 
-        self.create_subscription(Int32, "battery_percentage",
-                                 self.battery_percentage_callback, 10) """
+        self.node.create_subscription(Int32, "battery_percentage",
+                                 self.battery_percentage_callback, 10) 
 
-        self.node.create_subscription(
-            BlueyeCameraParams, "camera_params", self.camera_params_callback, 10)
+        #self.node.create_subscription(
+        #    BlueyeCameraParams, "camera_params", self.camera_params_callback, 10)
 
     def camera_params_callback(self, msg):
         """msg = BlueyeCameraParams()
@@ -211,6 +229,12 @@ class MyPlugin(Plugin):
         self.tilt_speed_ref = msg.tilt_speed_ref
         self.whitebalance = msg.whitebalance"""
         return
+
+    def battery_percentage_callback(self, msg):
+        self.battery_lvl = msg.data
+        print(str(msg.data))
+        string = str(self.battery_lvl) + '%'
+        self.batteryLevelLabel.setText(string)
 
     def initialize_publishers(self):
         print("Initializing ROS publishers")
@@ -252,7 +276,12 @@ class MyPlugin(Plugin):
         
         self.auto_mode_pub = self.node.create_publisher(
             Int32, "auto_mode_ref", 10)
-
+            
+    def publish_auto_mode_ref(self):
+        msg = Int32()
+        msg.data = 2*self.auto_depth_mode + self.auto_heading_mode
+        self.auto_mode_pub.publish(msg)
+        return
 
     def publish_camera_params_ref(self):
         msg = BlueyeCameraParams()
@@ -282,6 +311,20 @@ class MyPlugin(Plugin):
         msg = Float32()
         msg.data = self.boost
         self.boost_pub.publish(msg)
+
+    def autoDepthModeButtonClicked(self):
+        if self.auto_depth_mode == 0:
+            self.auto_depth_mode = 1
+        elif self.auto_depth_mode == 1:
+            self.auto_depth_mode = 0
+        self.publish_auto_mode_ref()
+        
+    def autoHeadingModeButtonClicked(self):
+        if self.auto_heading_mode == 0:
+            self.auto_heading_mode = 1
+        elif self.auto_heading_mode == 1:
+            self.auto_heading_mode = 0
+        self.publish_auto_mode_ref()
 
     def exposureCheckBoxStateChanged(self):
         self.exposure_auto = (not self.exposureCheckBox.checkState())
