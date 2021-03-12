@@ -98,18 +98,6 @@ class MyPlugin(Plugin):
         self.water_density = 1025
         self.boost = 0.5
 
-    def initialize_ros_stuff(self):
-        #self.node = rclpy.create_node('blueye_controls_gui_node')
-        self.RATE = 10  # Hz
-        self.initialize_publishers()
-        self.initialize_subscribers()
-        #self.initialize_timer()  # ???
-        self.publish_camera_params_ref()
-        self.publish_lights_ref()
-        self.publish_boost_ref()
-        self.publish_water_density_ref()
-        self.publish_auto_mode_ref()
-
     def initantiate_ui_elements(self):
         # Find battery level QLabel
         self.batteryLevelLabel = self._widget.findChild(
@@ -208,126 +196,6 @@ class MyPlugin(Plugin):
             QSlider, 'boostSlider')
         self.boostSlider.valueChanged.connect(
             self.boostSliderValueChanged)
-
-    def initialize_subscribers(self):
-        print("Initializing ROS subscribers")
-        """# Initialize ROS subscribers to ROV variables' reference - ROV set topics
-        self.create_subscription(
-            Twist, "thruster_force_norm_ref", self.thruster_force_norm_ref_callback, 10)
-        self.create_subscription(
-            Int32, "lights_lvl_ref", self.lights_lvl_ref_callback, 10)
-        self.create_subscription(
-            Int32, "auto_mode_ref", self.auto_mode_ref_callback, 10)
-        self.create_subscription(
-            BlueyeCameraParams, "camera_params_ref", self.camera_params_ref_callback, 10)
-        self.create_subscription(
-            Float32, "boost_gain_ref", self.boost_gain_ref_callback, 10)
-        self.create_subscription(
-            Float32, "slow_gain_ref", self.slow_gain_ref_callback, 10)
-        self.create_subscription(
-            Int32, "water_density_ref", self.water_density_ref_callback, 10)
-        """
-
-        self.node.create_subscription(Int32, "battery_percentage",
-                                      self.battery_percentage_callback, 10)
-        
-        # self.node.create_subscription(
-        #    BlueyeCameraParams, "camera_params", self.camera_params_callback, 10)
-
-    def camera_params_callback(self, msg):
-        """msg = BlueyeCameraParams()
-        self.bitrate = int(msg.bitrate/1000000) 
-        self.exposure_= msg.exposure
-        self.framerate = msg.frames_per_second 
-        self.is_recording = msg.is_recording
-        self.hue = msg.hue
-        self.recording_time = msg.recording_time 
-        self.resolution = msg.resolution
-        self.tilt_angle = msg.tilt_angle
-        self.tilt_speed_ref = msg.tilt_speed_ref
-        self.whitebalance = msg.whitebalance"""
-        return
-
-    def battery_percentage_callback(self, msg):
-        self.battery_lvl = msg.data
-        string = str(self.battery_lvl) + '%'
-        self.batteryLevelLabel.setText(string)
-
-    def initialize_publishers(self):
-        print("Initializing ROS publishers")
-        """# Initialize ROS publishers of ROV variables - ROV get topics
-        #self.pose_pub = self.create_publisher(Pose, "pose", 10)
-        # self.thruster_force_norm_pub = self.create_publisher(
-        #   Twist, "thruster_force_norm", 10)
-        self.lights_lvl_pub = self.create_publisher(
-            Int32, "lights_lvl_ref", 10)
-        self.connected_status_pub = self.create_publisher(
-            Bool, "connected_status", 10)
-        self.auto_mode_pub = self.create_publisher(
-            Int32, "auto_mode_ref", 10)  # 00, 01, 10, 11 active state for depth-heading
-        
-        self.battery_percentage_pub = self.create_publisher(
-            Int32, "battery_percentage", 10)
-        self.boost_gain_pub = self.create_publisher(
-            Float32, "boost_gain", 10)
-        self.slow_gain_pub = self.create_publisher(
-            Float32, "slow_gain", 10)
-        self.water_density_pub = self.create_publisher(
-            Int32, "water_density", 10)
-        self.ip_address_pub = self.create_publisher(
-            String, "ip_address", 10)
-        self.software_version_pub = self.create_publisher(
-            String, "software_version", 10) """
-
-        self.camera_params_pub = self.node.create_publisher(
-            BlueyeCameraParams, "camera_params_ref", 10)
-
-        self.lights_pub = self.node.create_publisher(
-            Int32, "lights_lvl_ref", 10)
-
-        self.boost_pub = self.node.create_publisher(
-            Float32, "boost_gain_ref", 10)
-
-        self.water_density_pub = self.node.create_publisher(
-            Int32, "water_density_ref", 10)
-
-        self.auto_mode_pub = self.node.create_publisher(
-            Int32, "auto_mode_ref", 10)
-
-    def publish_auto_mode_ref(self):
-        msg = Int32()
-        msg.data = 2*self.auto_depth_mode + self.auto_heading_mode
-        self.auto_mode_pub.publish(msg)
-        return
-
-    def publish_camera_params_ref(self):
-        msg = BlueyeCameraParams()
-        msg.bitrate = self.bitrate
-        msg.exposure = self.exposure
-        msg.frames_per_second = self.framerate
-        msg.is_recording = self.is_recording
-        msg.hue = self.hue
-        msg.recording_time = self.recording_time
-        msg.resolution = self.resolution
-        msg.tilt_angle = self.tilt_angle
-        msg.tilt_speed_ref = self.tilt_speed_ref
-        msg.whitebalance = self.whitebalance
-        self.camera_params_pub.publish(msg)
-
-    def publish_lights_ref(self):
-        msg = Int32()
-        msg.data = self.lights
-        self.lights_pub.publish(msg)
-
-    def publish_water_density_ref(self):
-        msg = Int32()
-        msg.data = self.water_density
-        self.water_density_pub.publish(msg)
-
-    def publish_boost_ref(self):
-        msg = Float32()
-        msg.data = self.boost
-        self.boost_pub.publish(msg)
 
     def autoDepthModeButtonClicked(self):
         if self.auto_depth_mode == 0:
@@ -453,6 +321,135 @@ class MyPlugin(Plugin):
         # TODO restore intrinsic configuration, usually using:
         # v = instance_settings.value(k)
         pass
+
+    def initialize_ros_stuff(self):
+        #self.node = rclpy.create_node('blueye_controls_gui_node')
+        self.RATE = 10  # Hz
+        self.initialize_publishers()
+        self.initialize_subscribers()
+        # self.initialize_timer()  # ???
+        self.publish_camera_params_ref()
+        self.publish_lights_ref()
+        self.publish_boost_ref()
+        self.publish_water_density_ref()
+        self.publish_auto_mode_ref()
+
+    def initialize_subscribers(self):
+        print("Initializing ROS subscribers")
+        """# Initialize ROS subscribers to ROV variables' reference - ROV set topics
+        self.create_subscription(
+            Twist, "thruster_force_norm_ref", self.thruster_force_norm_ref_callback, 10)
+        self.create_subscription(
+            Int32, "lights_lvl_ref", self.lights_lvl_ref_callback, 10)
+        self.create_subscription(
+            Int32, "auto_mode_ref", self.auto_mode_ref_callback, 10)
+        self.create_subscription(
+            BlueyeCameraParams, "camera_params_ref", self.camera_params_ref_callback, 10)
+        self.create_subscription(
+            Float32, "boost_gain_ref", self.boost_gain_ref_callback, 10)
+        self.create_subscription(
+            Float32, "slow_gain_ref", self.slow_gain_ref_callback, 10)
+        self.create_subscription(
+            Int32, "water_density_ref", self.water_density_ref_callback, 10)
+        """
+
+        self.node.create_subscription(Int32, "battery_percentage",
+                                      self.battery_percentage_callback, 10)
+
+    def initialize_publishers(self):
+        print("Initializing ROS publishers")
+        """# Initialize ROS publishers of ROV variables - ROV get topics
+        #self.pose_pub = self.create_publisher(Pose, "pose", 10)
+        # self.thruster_force_norm_pub = self.create_publisher(
+        #   Twist, "thruster_force_norm", 10)
+        self.lights_lvl_pub = self.create_publisher(
+            Int32, "lights_lvl_ref", 10)
+        self.connected_status_pub = self.create_publisher(
+            Bool, "connected_status", 10)
+        self.auto_mode_pub = self.create_publisher(
+            Int32, "auto_mode_ref", 10)  # 00, 01, 10, 11 active state for depth-heading
+        
+        self.battery_percentage_pub = self.create_publisher(
+            Int32, "battery_percentage", 10)
+        self.boost_gain_pub = self.create_publisher(
+            Float32, "boost_gain", 10)
+        self.slow_gain_pub = self.create_publisher(
+            Float32, "slow_gain", 10)
+        self.water_density_pub = self.create_publisher(
+            Int32, "water_density", 10)
+        self.ip_address_pub = self.create_publisher(
+            String, "ip_address", 10)
+        self.software_version_pub = self.create_publisher(
+            String, "software_version", 10) """
+
+        self.camera_params_pub = self.node.create_publisher(
+            BlueyeCameraParams, "camera_params_ref", 10)
+
+        self.lights_pub = self.node.create_publisher(
+            Int32, "lights_lvl_ref", 10)
+
+        self.boost_pub = self.node.create_publisher(
+            Float32, "boost_gain_ref", 10)
+
+        self.water_density_pub = self.node.create_publisher(
+            Int32, "water_density_ref", 10)
+
+        self.auto_mode_pub = self.node.create_publisher(
+            Int32, "auto_mode_ref", 10)
+
+    def camera_params_callback(self, msg):
+        """msg = BlueyeCameraParams()
+        self.bitrate = int(msg.bitrate/1000000) 
+        self.exposure_= msg.exposure
+        self.framerate = msg.frames_per_second 
+        self.is_recording = msg.is_recording
+        self.hue = msg.hue
+        self.recording_time = msg.recording_time 
+        self.resolution = msg.resolution
+        self.tilt_angle = msg.tilt_angle
+        self.tilt_speed_ref = msg.tilt_speed_ref
+        self.whitebalance = msg.whitebalance"""
+        return
+
+    def battery_percentage_callback(self, msg):
+        self.battery_lvl = msg.data
+        string = str(self.battery_lvl) + '%'
+        self.batteryLevelLabel.setText(string)
+
+    def publish_auto_mode_ref(self):
+        msg = Int32()
+        msg.data = 2*self.auto_depth_mode + self.auto_heading_mode
+        self.auto_mode_pub.publish(msg)
+        return
+
+    def publish_camera_params_ref(self):
+        msg = BlueyeCameraParams()
+        msg.bitrate = self.bitrate
+        msg.exposure = self.exposure
+        msg.frames_per_second = self.framerate
+        msg.is_recording = self.is_recording
+        msg.hue = self.hue
+        msg.recording_time = self.recording_time
+        msg.resolution = self.resolution
+        msg.tilt_angle = self.tilt_angle
+        msg.tilt_speed_ref = self.tilt_speed_ref
+        msg.whitebalance = self.whitebalance
+        self.camera_params_pub.publish(msg)
+
+    def publish_lights_ref(self):
+        msg = Int32()
+        msg.data = self.lights
+        self.lights_pub.publish(msg)
+
+    def publish_water_density_ref(self):
+        msg = Int32()
+        msg.data = self.water_density
+        self.water_density_pub.publish(msg)
+
+    def publish_boost_ref(self):
+        msg = Float32()
+        msg.data = self.boost
+        self.boost_pub.publish(msg)
 
     # def trigger_configuration(self):
         # Comment in to signal that the plugin has a way to configure
