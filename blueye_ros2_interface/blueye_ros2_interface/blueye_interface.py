@@ -10,12 +10,17 @@ from std_msgs.msg import Float32
 from std_msgs.msg import String
 from std_msgs.msg import Bool
 from sensor_msgs.msg import Image
+from sensor_msgs.msg import Joy
 from geometry_msgs.msg import Twist
 from geometry_msgs.msg import Pose
 from blueye_ros2_msgs.msg import BlueyeCameraParams
 
+from blueye_ros2_interface.blueye_joystick import JoystickHandler 
+
 import math
 import sys
+import inputs
+
 
 
 class BlueyeInterface(Node):
@@ -236,11 +241,84 @@ class BlueyeInterface(Node):
                 print("Water density above range. Setting to WATER_DENSITY_MAX.")
                 self.drone.config.water_density = self.WATER_DENSITY_MAX
 
+    def filter_and_normalize(self, value, lower=5000, upper=32768):
+        """Normalizing the joystick axis range from (default) -32768<->32678 to -1<->1
+
+        The sticks also tend to not stop at 0 when you let them go but rather some
+        low value, so we'll filter those out as well.
+        """
+        if -lower < value < lower:
+            return 0
+        elif lower <= value <= upper:
+            return (value - lower) / (upper - lower)
+        elif -upper <= value <= -lower:
+            return (value + lower) / (upper - lower)
+        else:
+            return 0
+
+    def joystick_callback(self, msg):
+        buttons = msg.buttons
+        axes = msg.axes
+        
+        btn_north = buttons[0] # or Y button
+        btn_east = buttons[0] # or B button
+        btn_south = buttons[0] # or A button
+        btn_west = buttons[0] # or X button
+        
+        #handle_x_button(self, value, drone):
+        self.drone.camera.is_recording = btn_west
+        
+        #handle_y_button(self, value, drone):
+        """Turns lights on or off"""
+        if btn_north:
+            if self.drone.lights > 0:
+                self.drone.lights = 0
+            else:
+                self.drone.lights = 10
+
+        #handle_b_button(self, value, drone):
+            """Toggles autoheading"""
+        if btn_east:
+            self.drone.motion.auto_heading_active = not self.drone.motion.auto_heading_active
+
+        #handle_a_button(self, value, drone):
+        """Toggles autodepth"""
+        if btn_south:
+            self.drone.motion.auto_depth_active = not self.drone.motion.auto_depth_active
+                
+        left_x_axis = axes[0]*32768
+        left_y_axis = axes[1]*32768
+        right_x_axis = axes[2]*32768
+        right_y_axis = axes[3]*32768
+
+        #handle_left_x_axis(self, value, drone):
+        self.drone.motion.yaw = self.filter_and_normalize(left_x_axis)
+
+        #handle_left_y_axis(self, value, drone):
+        self.drone.motion.heave = self.filter_and_normalize(left_y_axis)
+
+        #handle_right_x_axis(self, value, drone):
+        self.drone.motion.sway = self.filter_and_normalize(right_x_axis)
+
+        #handle_right_y_axis(self, value, drone):
+        self.drone.motion.surge = -self.filter_and_normalize(right_y_axis)
+
+
+
+        #handle_left_trigger(self, value, drone):
+        #self.drone.motion.slow = self.filter_and_normalize(value, lower=0, upper=255)
+
+        #handle_right_trigger(self, value, drone):
+        #self.drone.motion.boost = self.filter_and_normalize(value, lower=0, upper=255)
+        
+        
+        
     def declare_node_parameters(self):
         print("Declaring ROS parameters")
         # ROS params
         self.declare_parameter('rate', 10)
         self.declare_parameter('is_simulation', False)
+        self.declare_parameter('use_gamepad', False)
 
         # Blueye params
         # Camera params
@@ -296,6 +374,8 @@ class BlueyeInterface(Node):
             'rate').get_parameter_value().double_value  # ParameterType.msg
         self.IS_SIMULATION = self.get_parameter(
             'is_simulation').get_parameter_value().bool_value
+        self.USE_GAMEPAD = self.get_parameter(
+            'use_gamepad').get_parameter_value().bool_value
 
         # Setting Blueye parameters
         # Camera params
@@ -388,7 +468,7 @@ class BlueyeInterface(Node):
         # through topic publishing and not ROS2 node param change
         self.set_blueye_params()
         self.publish_all_blueye_variables()
-
+            
     def publish_all_blueye_variables(self):
         # Publishing ROV params and variables to ROS topics
         if not self.IS_SIMULATION:
@@ -521,6 +601,8 @@ class BlueyeInterface(Node):
             Float32, "slow_gain_ref", self.slow_gain_ref_callback, 10)
         self.create_subscription(
             Int32, "water_density_ref", self.water_density_ref_callback, 10)
+        self.create_subscription(
+            Joy, "joy", self.joystick_callback, 10)
 
     def initialize_publishers(self):
         print("Initializing ROS publishers")
@@ -578,7 +660,7 @@ class BlueyeInterface(Node):
         self.initialize_subscribers()
         self.initialize_publishers()
         self.initialize_blueye_connection()
-
+        
 
 def main(args=None):
     print("Started")
