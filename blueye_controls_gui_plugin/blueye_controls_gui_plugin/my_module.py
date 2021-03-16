@@ -1,5 +1,4 @@
 import rclpy
-#import rospkg
 from ament_index_python.packages import get_package_share_directory
 
 from std_msgs.msg import Int32
@@ -15,9 +14,8 @@ import os
 
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
-#from python_qt_binding.QtWidgets import QWidget
-from python_qt_binding.QtWidgets import *
-
+from python_qt_binding.QtWidgets import QWidget, QLabel, QPushButton, \
+    QComboBox, QSlider, QCheckBox
 
 class MyPlugin(Plugin):
 
@@ -74,7 +72,7 @@ class MyPlugin(Plugin):
         self.initialize_ros_stuff()
 
         # Instantiate UI elements from the loaded .ui file
-        self.initantiate_ui_elements()
+        self.instantiate_ui_elements()
 
     def initialize_class_properties(self):
         self.battery_lvl = 50
@@ -98,7 +96,7 @@ class MyPlugin(Plugin):
         self.water_density = 1025
         self.boost = 0.5
 
-    def initantiate_ui_elements(self):
+    def instantiate_ui_elements(self):
         # Find battery level QLabel
         self.batteryLevelLabel = self._widget.findChild(
             QLabel, 'batteryLevelLabel')
@@ -285,7 +283,6 @@ class MyPlugin(Plugin):
 
     def waterDensityComboBoxCurrentTextChanged(self):
         chosen_option = self.waterDensityComboBox.currentText()
-        print(str(chosen_option))
         if chosen_option == "Salty - 1025 g/l":
             self.water_density = 1025
         elif chosen_option == "Freshwater - 997g/l":
