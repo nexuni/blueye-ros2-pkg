@@ -141,7 +141,7 @@
       <number>1</number>
      </property>
      <property name="value">
-      <number>50</number>
+      <number>0</number>
      </property>
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
@@ -312,7 +312,7 @@
    <item row="20" column="4">
     <widget class="QLabel" name="boostSliderValueLabel">
      <property name="text">
-      <string>50%</string>
+      <string>0%</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>

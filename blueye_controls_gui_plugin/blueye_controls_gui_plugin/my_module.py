@@ -94,7 +94,7 @@ class MyPlugin(Plugin):
 
         self.lights = 0
         self.water_density = 1025
-        self.boost = 0.5
+        self.boost = 0.0
 
     def instantiate_ui_elements(self):
         # Find battery level QLabel
