@@ -44,11 +44,7 @@ blueye: # namespace
       
       ## Lights level limits, type: int, range: [0, 255], unit: []
       lights_level_min: 0
-      lights_level_max: 255
-      
-      ## Lights change step when using gamepad
-      lights_level_delta_perc: 10 # percent of the range
-      lights_level_turn_on_perc: 50 # percent of the range
+      lights_level_max: 255    
       
       ## Velocities forces limits: type: float, range: [-1, 1], unit: []
       velocity_force_min: -1
@@ -69,19 +65,12 @@ blueye: # namespace
       density_salty: 1025
       water_density_values: [ 997, 1011, 1025 ]
       water_density_min: 997
-      water_density_max: 1240
+      water_density_max: 1240      
       
-            
+      # Gamepad-related parameters
+      ## Lights change step when using gamepad
+      lights_level_delta_perc: 10 # percent of the range
+      lights_level_turn_on_perc: 50 # percent of the range
       
-       # type: , range: , unit: 
-       # type: , range: , unit: 
-       # type: , range: , unit:
-        # type: , range: , unit: 
-         # type: , range: , unit: 
-          # type: , range: , unit: 
-           # type: , range: , unit: 
-            # type: , range: , unit: 
-             # type: , range: , unit: 
-             
-              
- # type: , range: , unit: 
+      gamepad_deadzone: 5000
+      gamepad_axes_max_value: 32768

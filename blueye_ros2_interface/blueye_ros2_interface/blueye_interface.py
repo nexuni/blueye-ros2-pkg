@@ -249,7 +249,7 @@ class BlueyeInterface(Node):
                 print("Water density above range. Setting to WATER_DENSITY_MAX.")
                 self.drone.config.water_density = self.WATER_DENSITY_MAX
 
-    def filter_and_normalize(self, value, lower=5000, upper=32768):
+    def filter_and_normalize(self, value, lower, upper): # lower=5000, upper=32768):
         """Normalizing the joystick axis range from (default) -32768<->32678 to -1<->1
 
         The sticks also tend to not stop at 0 when you let them go but rather some
@@ -324,22 +324,22 @@ class BlueyeInterface(Node):
         
         # Scaling of [-1, 1] range from ROS2 joy pkg to [-32768, 32768]
         # that filter_and_normalize() expects 
-        left_x_axis = axes[0]*32768
-        left_y_axis = axes[1]*32768
-        right_x_axis = axes[2]*32768
-        right_y_axis = axes[3]*32768
+        left_x_axis = int(axes[0]*self.GAMEPAD_AXES_MAX_VALUE)
+        left_y_axis = int(axes[1]*self.GAMEPAD_AXES_MAX_VALUE)
+        right_x_axis = int(axes[2]*self.GAMEPAD_AXES_MAX_VALUE)
+        right_y_axis = int(axes[3]*self.GAMEPAD_AXES_MAX_VALUE)
 
         #handle_left_x_axis(self, value, drone):
-        self.drone.motion.yaw = self.filter_and_normalize(left_x_axis)
+        self.drone.motion.yaw = self.filter_and_normalize(left_x_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
 
         #handle_left_y_axis(self, value, drone):
-        self.drone.motion.heave = self.filter_and_normalize(left_y_axis)
+        self.drone.motion.heave = self.filter_and_normalize(left_y_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
 
         #handle_right_x_axis(self, value, drone):
-        self.drone.motion.sway = self.filter_and_normalize(right_x_axis)
+        self.drone.motion.sway = self.filter_and_normalize(right_x_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
 
         #handle_right_y_axis(self, value, drone):
-        self.drone.motion.surge = -self.filter_and_normalize(right_y_axis)
+        self.drone.motion.surge = -self.filter_and_normalize(right_y_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
        
     def declare_node_parameters(self):
         print("Declaring ROS parameters")
@@ -378,9 +378,7 @@ class BlueyeInterface(Node):
 
         # Lights level params
         self.declare_parameter('lights_level_min', 0)
-        self.declare_parameter('lights_level_max', 255)
-        self.declare_parameter('lights_level_turn_on_perc', 50)
-        self.declare_parameter('lights_level_delta_perc', 10)
+        self.declare_parameter('lights_level_max', 255)        
 
         # Reference force for velocities limits
         self.declare_parameter('velocity_force_min', -1.0)
@@ -397,6 +395,13 @@ class BlueyeInterface(Node):
         # Water density limits
         self.declare_parameter('water_density_min', 997)
         self.declare_parameter('water_density_max', 1240)
+        
+        # Gamepad params
+        self.declare_parameter('lights_level_delta_perc', 10) 
+        self.declare_parameter('lights_level_turn_on_perc', 50) 
+      
+        self.declare_parameter('gamepad_deadzone', 5000)
+        self.declare_parameter('gamepad_axes_max_value', 32768)
 
     def get_ros_params(self):
         # Setting ROS parameters
@@ -459,11 +464,7 @@ class BlueyeInterface(Node):
             'lights_level_min').get_parameter_value().integer_value
         self.LIGHTS_LEVEL_MAX = self.get_parameter(
             'lights_level_max').get_parameter_value().integer_value       
-        self.LIGHTS_LEVEL_TURN_ON_PERC = self.get_parameter(
-            'lights_level_turn_on_perc').get_parameter_value().integer_value             
-        self.LIGHTS_LEVEL_DELTA_PERC = self.get_parameter(
-            'lights_level_delta_perc').get_parameter_value().integer_value
-
+        
         # Reference forces' limits
         self.VELOCITY_FORCE_MIN = self.get_parameter(
             'velocity_force_min').get_parameter_value().integer_value
@@ -487,7 +488,18 @@ class BlueyeInterface(Node):
             'water_density_min').get_parameter_value().integer_value
         self.WATER_DENSITY_MAX = self.get_parameter(
             'water_density_max').get_parameter_value().integer_value
+        
+        # Gamepad-related params
+        self.GAMEPAD_DEADZONE = self.get_parameter(
+            'gamepad_deadzone').get_parameter_value().integer_value
+        self.GAMEPAD_AXES_MAX_VALUE = self.get_parameter(
+            'gamepad_axes_max_value').get_parameter_value().integer_value
+        self.LIGHTS_LEVEL_TURN_ON_PERC = self.get_parameter(
+            'lights_level_turn_on_perc').get_parameter_value().integer_value             
+        self.LIGHTS_LEVEL_DELTA_PERC = self.get_parameter(
+            'lights_level_delta_perc').get_parameter_value().integer_value
 
+        
     def set_blueye_params(self):
         return
 
