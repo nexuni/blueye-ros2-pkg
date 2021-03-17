@@ -214,7 +214,15 @@ class BlueyeInterface(Node):
             elif (boost_gain > self.BOOST_GAIN_MAX):
                 print("Boost gain above range. Setting to BOOST_GAIN_MAX.")
                 self.drone.motion.boost = self.BOOST_GAIN_MAX
-
+                
+        print('Ref boost: ' + str(boost_gain))
+        print('Boost: ' + str(self.drone.motion.boost))
+        print('Boost: ' + str(self.drone.motion.boost))
+        print('Boost: ' + str(self.drone.motion.boost))
+        print('Boost: ' + str(self.drone.motion.boost))
+        print('Boost: ' + str(self.drone.motion.boost))
+        print('Boost: ' + str(self.drone.motion.boost))
+        
     def slow_gain_ref_callback(self, msg):
         slow_gain = msg.data
         if not self.IS_SIMULATION:
@@ -261,20 +269,41 @@ class BlueyeInterface(Node):
         axes = msg.axes
         
         btn_north = buttons[0] # or Y button
-        btn_east = buttons[0] # or B button
-        btn_south = buttons[0] # or A button
-        btn_west = buttons[0] # or X button
+        btn_east = buttons[1] # or B button
+        btn_south = buttons[2] # or A button
+        btn_west = buttons[3] # or X button
+        btn_lb = buttons[4]
+        btn_rb = buttons[5]
+        btn_lt = buttons[6] # left trigger
+        btn_rt = buttons[7] # left trigger
         
         #handle_x_button(self, value, drone):
-        self.drone.camera.is_recording = btn_west
+        if btn_west:
+            self.drone.camera.is_recording = not self.drone.camera.is_recording
         
         #handle_y_button(self, value, drone):
         """Turns lights on or off"""
+        self.LIGHTS_LEVEL_DELTA = int(self.LIGHTS_LEVEL_DELTA_PERC/100.0 * (self.LIGHTS_LEVEL_MAX - self.LIGHTS_LEVEL_MIN))
+        self.LIGHTS_LEVEL_TURN_ON = int(self.LIGHTS_LEVEL_TURN_ON_PERC/100.0 * (self.LIGHTS_LEVEL_MAX - self.LIGHTS_LEVEL_MIN))
+                
         if btn_north:
-            if self.drone.lights > 0:
-                self.drone.lights = 0
+            if self.drone.lights > self.LIGHTS_LEVEL_MIN:
+                self.drone.lights = self.LIGHTS_LEVEL_MIN
             else:
-                self.drone.lights = 10
+                self.drone.lights = self.LIGHTS_LEVEL_TURN_ON        
+        
+        if btn_lb:
+            if (self.drone.lights - self.LIGHTS_LEVEL_DELTA ) >= self.LIGHTS_LEVEL_MIN:
+                self.drone.lights -= self.LIGHTS_LEVEL_DELTA
+            else:
+                self.drone.lights = self.LIGHTS_LEVEL_MIN
+        
+        if btn_rb:
+            if (self.drone.lights  + self.LIGHTS_LEVEL_DELTA ) <= self.LIGHTS_LEVEL_MAX:
+                self.drone.lights += self.LIGHTS_LEVEL_DELTA
+            else:
+                self.drone.lights = self.LIGHTS_LEVEL_MAX
+                
 
         #handle_b_button(self, value, drone):
             """Toggles autoheading"""
@@ -285,7 +314,16 @@ class BlueyeInterface(Node):
         """Toggles autodepth"""
         if btn_south:
             self.drone.motion.auto_depth_active = not self.drone.motion.auto_depth_active
-                
+        
+        #handle_left_trigger(self, value, drone):
+        self.drone.motion.slow = self.filter_and_normalize(btn_lt, lower=0, upper = 1) #upper=255)
+
+        #handle_right_trigger(self, value, drone):
+        self.drone.motion.boost = self.filter_and_normalize(btn_rt, lower=0, upper = 1) #upper=255)
+        
+        
+        # Scaling of [-1, 1] range from ROS2 joy pkg to [-32768, 32768]
+        # that filter_and_normalize() expects 
         left_x_axis = axes[0]*32768
         left_y_axis = axes[1]*32768
         right_x_axis = axes[2]*32768
@@ -302,17 +340,7 @@ class BlueyeInterface(Node):
 
         #handle_right_y_axis(self, value, drone):
         self.drone.motion.surge = -self.filter_and_normalize(right_y_axis)
-
-
-
-        #handle_left_trigger(self, value, drone):
-        #self.drone.motion.slow = self.filter_and_normalize(value, lower=0, upper=255)
-
-        #handle_right_trigger(self, value, drone):
-        #self.drone.motion.boost = self.filter_and_normalize(value, lower=0, upper=255)
-        
-        
-        
+       
     def declare_node_parameters(self):
         print("Declaring ROS parameters")
         # ROS params
@@ -351,6 +379,8 @@ class BlueyeInterface(Node):
         # Lights level params
         self.declare_parameter('lights_level_min', 0)
         self.declare_parameter('lights_level_max', 255)
+        self.declare_parameter('lights_level_turn_on_perc', 50)
+        self.declare_parameter('lights_level_delta_perc', 10)
 
         # Reference force for velocities limits
         self.declare_parameter('velocity_force_min', -1.0)
@@ -428,7 +458,11 @@ class BlueyeInterface(Node):
         self.LIGHTS_LEVEL_MIN = self.get_parameter(
             'lights_level_min').get_parameter_value().integer_value
         self.LIGHTS_LEVEL_MAX = self.get_parameter(
-            'lights_level_max').get_parameter_value().integer_value
+            'lights_level_max').get_parameter_value().integer_value       
+        self.LIGHTS_LEVEL_TURN_ON_PERC = self.get_parameter(
+            'lights_level_turn_on_perc').get_parameter_value().integer_value             
+        self.LIGHTS_LEVEL_DELTA_PERC = self.get_parameter(
+            'lights_level_delta_perc').get_parameter_value().integer_value
 
         # Reference forces' limits
         self.VELOCITY_FORCE_MIN = self.get_parameter(
@@ -542,6 +576,11 @@ class BlueyeInterface(Node):
 
             # Publishing boost gain
             msg = Float32()
+            # TODO: Check why boost is initially int and then float
+            # TODO: Check why boost value is not the same here as in
+            # boost_ref_callback
+            print(str(type(self.drone.motion.boost)))
+            print('Boost2: '  + str(self.drone.motion.boost))
             msg.data = float(self.drone.motion.boost)
             self.boost_gain_pub.publish(msg)
 

@@ -75,6 +75,12 @@ def generate_launch_description():
                 get_package_share_directory('teleop_twist_joy'), 'config', '')),
             joy_config, TextSubstitution(text='.config.yaml')])
     """
+    
+    joystick_node_params = os.path.join(
+        get_package_share_directory('blueye_ros2_interface'),
+        'config',
+        'joystick_node_params.yaml'
+        )
 
     joystick_node = Node (
             namespace='blueye',
@@ -84,11 +90,7 @@ def generate_launch_description():
             output='screen',
             emulate_tty=True,
             #arguments = [ '--perspective-file', rqt_gui_node_perspective  ] 
-            parameters=[{
-                'dev': '/dev/input/js0',
-                'deadzone': 0.3,
-                'autorepeat_rate': 20.0,
-            }]
+            parameters=[ joystick_node_params ]
             #remappings= joystick_remappings
         )
     

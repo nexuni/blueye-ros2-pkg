@@ -46,6 +46,10 @@ blueye: # namespace
       lights_level_min: 0
       lights_level_max: 255
       
+      ## Lights change step when using gamepad
+      lights_level_delta_perc: 10 # percent of the range
+      lights_level_turn_on_perc: 50 # percent of the range
+      
       ## Velocities forces limits: type: float, range: [-1, 1], unit: []
       velocity_force_min: -1
       velocity_force_max: 1
