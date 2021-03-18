@@ -215,13 +215,14 @@ class BlueyeInterface(Node):
                 print("Boost gain above range. Setting to BOOST_GAIN_MAX.")
                 self.drone.motion.boost = self.BOOST_GAIN_MAX
                 
-        print('Ref boost: ' + str(boost_gain))
+        """print('Ref boost: ' + str(boost_gain))
         print('Boost: ' + str(self.drone.motion.boost))
         print('Boost: ' + str(self.drone.motion.boost))
         print('Boost: ' + str(self.drone.motion.boost))
         print('Boost: ' + str(self.drone.motion.boost))
         print('Boost: ' + str(self.drone.motion.boost))
         print('Boost: ' + str(self.drone.motion.boost))
+        """
         
     def slow_gain_ref_callback(self, msg):
         slow_gain = msg.data
@@ -324,10 +325,10 @@ class BlueyeInterface(Node):
         
         # Scaling of [-1, 1] range from ROS2 joy pkg to [-32768, 32768]
         # that filter_and_normalize() expects 
-        left_x_axis = int(axes[0]*self.GAMEPAD_AXES_MAX_VALUE)
-        left_y_axis = int(axes[1]*self.GAMEPAD_AXES_MAX_VALUE)
-        right_x_axis = int(axes[2]*self.GAMEPAD_AXES_MAX_VALUE)
-        right_y_axis = int(axes[3]*self.GAMEPAD_AXES_MAX_VALUE)
+        left_x_axis = int(self.GAMEPAD_AXIS0_SIGN*axes[0]*self.GAMEPAD_AXES_MAX_VALUE)
+        left_y_axis = int(self.GAMEPAD_AXIS1_SIGN*axes[1]*self.GAMEPAD_AXES_MAX_VALUE)
+        right_x_axis = int(self.GAMEPAD_AXIS2_SIGN*axes[2]*self.GAMEPAD_AXES_MAX_VALUE)
+        right_y_axis = int(self.GAMEPAD_AXIS3_SIGN*axes[3]*self.GAMEPAD_AXES_MAX_VALUE)
 
         #handle_left_x_axis(self, value, drone):
         self.drone.motion.yaw = self.filter_and_normalize(left_x_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
@@ -402,7 +403,12 @@ class BlueyeInterface(Node):
       
         self.declare_parameter('gamepad_deadzone', 5000)
         self.declare_parameter('gamepad_axes_max_value', 32768)
-
+        
+        self.declare_parameter('gamepad_axis0_sign', 1)
+        self.declare_parameter('gamepad_axis1_sign', 1)
+        self.declare_parameter('gamepad_axis2_sign', 1)
+        self.declare_parameter('gamepad_axis3_sign', 1)
+        
     def get_ros_params(self):
         # Setting ROS parameters
         self.RATE = self.get_parameter(
@@ -498,8 +504,15 @@ class BlueyeInterface(Node):
             'lights_level_turn_on_perc').get_parameter_value().integer_value             
         self.LIGHTS_LEVEL_DELTA_PERC = self.get_parameter(
             'lights_level_delta_perc').get_parameter_value().integer_value
-
-        
+        self.GAMEPAD_AXIS0_SIGN = self.get_parameter(
+            'gamepad_axis0_sign').get_parameter_value().integer_value
+        self.GAMEPAD_AXIS1_SIGN = self.get_parameter(
+            'gamepad_axis1_sign').get_parameter_value().integer_value
+        self.GAMEPAD_AXIS2_SIGN = self.get_parameter(
+            'gamepad_axis2_sign').get_parameter_value().integer_value
+        self.GAMEPAD_AXIS3_SIGN = self.get_parameter(
+            'gamepad_axis3_sign').get_parameter_value().integer_value
+                
     def set_blueye_params(self):
         return
 
@@ -591,8 +604,8 @@ class BlueyeInterface(Node):
             # TODO: Check why boost is initially int and then float
             # TODO: Check why boost value is not the same here as in
             # boost_ref_callback
-            print(str(type(self.drone.motion.boost)))
-            print('Boost2: '  + str(self.drone.motion.boost))
+            ##print(str(type(self.drone.motion.boost)))
+            ##print('Boost2: '  + str(self.drone.motion.boost))
             msg.data = float(self.drone.motion.boost)
             self.boost_gain_pub.publish(msg)
 

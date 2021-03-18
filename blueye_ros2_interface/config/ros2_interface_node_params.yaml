@@ -74,3 +74,9 @@ blueye: # namespace
       
       gamepad_deadzone: 5000
       gamepad_axes_max_value: 32768
+      
+      gamepad_axis0_sign: -1
+      gamepad_axis1_sign: -1
+      gamepad_axis2_sign: -1
+      gamepad_axis3_sign: -1
+      

@@ -98,7 +98,7 @@ def generate_launch_description():
             namespace = 'blueye',
             name='blueye_teleop_twist_joy_node',
             package='teleop_twist_joy', 
-            node_executable='teleop_node',
+            executable='teleop_node',
             output='screen',
             emulate_tty=True,
             parameters=[] #[config_filepath]
