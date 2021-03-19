@@ -13,27 +13,7 @@ from ament_index_python.packages import get_package_share_directory
 def generate_launch_description():
     ld = LaunchDescription()
             
-    gstreamer_node_params = os.path.join(
-        get_package_share_directory('blueye_ros2_interface'),
-        'config',
-        'gstreamer_node_params.yaml'
-        )
-        
-    gstreamer_remappings = [('image_raw', 'camera_img_raw'),
-                  ('camera_info', 'camera_calibration_params')]
-    
-    gstreamer_node = Node (
-            namespace='blueye',
-            name='gstreamer_node',
-            package='gscam',
-            executable='gscam_main',
-            output='screen',
-            emulate_tty=True,
-            parameters= [gstreamer_node_params],
-            remappings=gstreamer_remappings
-    
-        )
-    
+       
     ###################################################################
     
     """joy_config = 'ps3'
@@ -119,16 +99,10 @@ def generate_launch_description():
     
     ###################################################################
     
-    ld.add_action(gstreamer_node)    
+    #ld.add_action(gstreamer_node)    
     ##ld.add_action(rqt_image_view_node)
-    ld.add_action(rqt_gui_node)
-    
-    
+    ld.add_action(rqt_gui_node)     
     ld.add_action(joystick_node)
-    #ld.add_action(joystick_teleop_node)
-    
-    
-    
-    
+    #ld.add_action(joystick_teleop_node)    
     return ld
 
