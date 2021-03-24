@@ -13,9 +13,9 @@ from ament_index_python.packages import get_package_share_directory
 
 
 def generate_launch_description():
+    ld = LaunchDescription()
     
     pkg_dir = get_package_share_directory('blueye_ros2_interface')
-
     
     launch_bttm_side = IncludeLaunchDescription( \
         PythonLaunchDescriptionSource( pkg_dir + \
@@ -23,15 +23,8 @@ def generate_launch_description():
     
     launch_top_side = IncludeLaunchDescription( \
         PythonLaunchDescriptionSource( pkg_dir + \
-        '/launch/start_blueye_interface_top_side.launch.py')) 
-    
+        '/launch/start_blueye_interface_top_side.launch.py'))     
         
-    return LaunchDescription([
-        launch_bttm_side,
-        launch_top_side
-    ])
-
-
-
-
-
+    ld.add_action(launch_bttm_side)
+    ld.add_action(launch_top_side)
+    return ld

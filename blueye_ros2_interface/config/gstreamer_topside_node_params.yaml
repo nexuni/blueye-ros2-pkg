@@ -1,5 +1,5 @@
 blueye:
-  gstreamer_node:
+  gstreamer_node_topside:
     ros__parameters:
       #gscam_config: 'rtspsrc location=rtsp://192.168.1.101:8554/test latency=0 ! rtph264depay ! avdec_h264 ! videoconvert ! fpsdisplaysink sync=false'
       #preroll: False # was True
@@ -17,5 +17,3 @@ blueye:
       use_gst_timestamps: True
       camera_name: 'my_camera'
       frame_id: 'my_camera_frame'
-    
-
