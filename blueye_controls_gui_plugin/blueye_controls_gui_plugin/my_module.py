@@ -11,11 +11,13 @@ from geometry_msgs.msg import Pose
 from blueye_ros2_msgs.msg import BlueyeCameraParams
 
 import os
+import time
 
 from qt_gui.plugin import Plugin
 from python_qt_binding import loadUi
+from python_qt_binding.QtGui import QIcon
 from python_qt_binding.QtWidgets import QWidget, QLabel, QPushButton, \
-    QComboBox, QSlider, QCheckBox
+    QComboBox, QSlider, QCheckBox, QProgressBar
 
 class MyPlugin(Plugin):
 
@@ -73,11 +75,19 @@ class MyPlugin(Plugin):
 
         # Instantiate UI elements from the loaded .ui file
         self.instantiate_ui_elements()
+        
+        # Loading class properties values from ROV during start up
+        self.update_class_properties()
+        
+        #Testing somethin
+        
+        
 
     def initialize_class_properties(self):
         self.battery_lvl = 50
         self.auto_depth_mode = 0
         self.auto_heading_mode = 0
+        self.manual_control_enable = False
 
         self.exposure_auto = True
         self.whitebalance_auto = True
@@ -95,13 +105,116 @@ class MyPlugin(Plugin):
         self.lights = 0
         self.water_density = 1025
         self.boost = 0.0
+        
+        # Exposure slider values placed in lists
+        self.exposureValueOutputWriteList = ["1/1000", "1/800", "1/640", "1/500", "1/400", "1/320", "1/250", "1/200", "1/160", "1/125", "1/100", "1/80", "1/60", "1/50", "1/40", "1/30", "1/20", "1/15", "1/10", "1/8", "1/6", "1/5", "1/4", "0.3", "0.4", "0.5", "0.6", "0.8", "1", "1.3", "1.6", "2", "2.5", "3.2", "4", "5"]
+        self.exposureValueList = [0.001, 0.0012, 0.0015, 0.002, 0.0025, 0.0031, 0.004, 0.005, 0.0062, 0.008, 0.01, 0.0125, 0.0167, 0.02, 0.025, 0.0333, 0.05, 0.0667, 0.1, 0.125, 0.1667, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.8, 1, 1.3, 1.6, 2, 2.5, 3.2, 4, 5]
+        
+    def update_class_properties(self):
+        #initializing gui from ROV
+        #creating wait time for cca 100 ms
+        time.sleep(0.1)
+        
+        try:
+           # self.camera_params_callback
+           # self.lights_callback
+           # self.water_density_callback
+           # self.boost_callback
+            
+            self.battery_lvl = 50
+            self.auto_depth_mode = 0
+            self.auto_heading_mode = 0
+            self.manual_control_enable = False
+
+            self.exposure_auto = True
+            self.whitebalance_auto = True
+            bitrateTemp = int(self.bitrate/1000000)
+            if self.exposure == -1:
+                exposureTemp = 0
+            else:
+                exposureTemp = int(self.exposureValueList.index(self.exposure/1000)+1)
+            if self.framerate == 25:
+                framerateTemp = 0
+            else:
+                framerateTemp = 1
+            is_recordingTemp = int(self.is_recording)
+            hueTemp = int(self.hue/4)
+            recording_timeTemp = int(self.recording_time)
+            if self.resolution == 1080:
+                resolutionTemp = 0
+            else:
+                resolutionTemp = 1
+            tilt_angleTemp = int(self.tilt_angle)
+            tilt_speed_refTemp = int(self.tilt_speed_ref)
+            if self.whitebalance == -1:
+                whitebalanceTemp = 0
+            else:
+                whitebalanceTemp = int((self.whitebalance-2800)/500)
+            
+            
+            
+            lightsTemp = int(round(self.lights*10/255))
+            if self.water_density == 1025:
+                water_densityTemp = 0
+            elif self.water_density == 997:
+                water_densityTemp = 1
+            else:
+                water_densityTemp = 2
+            boostTemp = int(self.boost*10)
+            print("Updating values from ROV - Succeeded")
+        except:
+            
+
+            self.battery_lvl = 50
+            self.auto_depth_mode = 0
+            self.auto_heading_mode = 0
+            self.manual_control_enable = False
+
+            self.exposure_auto = True
+            self.whitebalance_auto = True
+            self.bitrate = 8000000
+            self.exposure = -1
+            self.framerate = 25
+            self.is_recording = False
+            self.hue = 0
+            self.recording_time = -1
+            self.resolution = 1080
+            self.tilt_angle = 0.0
+            self.tilt_speed_ref = 0
+            self.whitebalance = -1
+
+            self.lights = 0
+            self.water_density = 1025
+            self.boost = 0.0
+
+            print("Updating values from ROV - Failed")
+        
+        self.autoDepthModeButton.setChecked(False)
+        self.autoHeadingModeButton.setChecked(False)
+        self.manualAutoPushButton.setChecked(False)
+
+        self.exposureCheckBox.setChecked(False)
+        self.whiteBalanceCheckBox.setChecked(False) #treba napraviti i za njih da čitaju
+
+        self.exposureSlider.setValue(exposureTemp)
+        self.whiteBalanceSlider.setValue(whitebalanceTemp)
+        self.hueSlider.setValue(hueTemp)
+        self.bitrateSlider.setValue(bitrateTemp)
+        self.framerateComboBox.setCurrentIndex(framerateTemp)
+        self.resolutionComboBox.setCurrentIndex(resolutionTemp)
+        self.lightsSlider.setValue(lightsTemp)
+        self.waterDensityComboBox.setCurrentIndex(water_densityTemp)
+        self.boostSlider.setValue(boostTemp)
 
     def instantiate_ui_elements(self):
         # Find battery level QLabel
         self.batteryLevelLabel = self._widget.findChild(
             QLabel, 'batteryLevelLabel')
+        self.batteryPercentageBar = self._widget.findChild(
+            QProgressBar, 'batteryPercentageBar')
+        
 
-        # Find auto depth and heading modes QPushBUttons and connect
+        # Find auto depth and heading modes QPushButtons and connect
         # their Clicked signal with callbacks
         self.autoDepthModeButton = self._widget.findChild(
             QPushButton, 'autoDepthModeButton')
@@ -112,6 +225,15 @@ class MyPlugin(Plugin):
             QPushButton, 'autoHeadingModeButton')
         self.autoHeadingModeButton.clicked.connect(
             self.autoHeadingModeButtonClicked)
+
+        
+        #Find manual mode QPushButton and connect their Clicked signal with callbacks
+        
+        self.manualAutoPushButton = self._widget.findChild(
+            QPushButton, 'manualAutoPushButton')
+        self.manualAutoPushButton.clicked.connect(
+            self.manualAutoPushButtonClicked)
+
 
         # Find exposure_feature-related blocks and connect their signals with callbacks
         self.exposureCheckBox = self._widget.findChild(
@@ -194,6 +316,27 @@ class MyPlugin(Plugin):
             QSlider, 'boostSlider')
         self.boostSlider.valueChanged.connect(
             self.boostSliderValueChanged)
+        
+
+        self.boostSliderRealValueLabel = self._widget.findChild(
+            QLabel, 'boostSliderRealValueLabel')
+        self.waterDensityDropMenuRealValueLabel = self._widget.findChild(
+            QLabel, 'waterDensityDropMenuRealValueLabel')
+        self.lightsSliderRealValueLabel = self._widget.findChild(
+            QLabel, 'lightsSliderRealValueLabel')
+        self.resolutionComboBoxRealValueLabel = self._widget.findChild(
+            QLabel, 'resolutionComboBoxRealValueLabel')
+        self.bitrateSliderRealValueLabel = self._widget.findChild(
+            QLabel, 'bitrateSliderRealValueLabel')
+        self.hueSliderRealValueLabel = self._widget.findChild(
+            QLabel, 'hueSliderRealValueLabel')
+        self.framerateComboBoxRealValueLabel = self._widget.findChild(
+            QLabel, 'framerateComboBoxRealValueLabel')
+        self.whiteBalanceSliderRealValueLabel = self._widget.findChild(
+            QLabel, 'whiteBalanceSliderRealValueLabel')
+        self.exposureSliderRealValueLabel = self._widget.findChild(
+            QLabel, 'exposureSliderRealValueLabel')
+            
 
     def autoDepthModeButtonClicked(self):
         if self.auto_depth_mode == 0:
@@ -208,6 +351,13 @@ class MyPlugin(Plugin):
         elif self.auto_heading_mode == 1:
             self.auto_heading_mode = 0
         self.publish_auto_mode_ref()
+    
+    def manualAutoPushButtonClicked(self):
+        if self.manual_control_enable == False:
+            self.manual_control_enable = True
+        elif self.manual_control_enable == True:
+            self.manual_control_enable = False
+        self.publish_manual_control_enable_ref()
 
     def exposureCheckBoxStateChanged(self):
         self.exposure_auto = (not self.exposureCheckBox.checkState())
@@ -226,8 +376,8 @@ class MyPlugin(Plugin):
 
     def exposureSliderValueChanged(self):
         if not self.exposure_auto:
-            self.exposure = self.exposureSlider.value()
-            string = str(self.exposure) + '/1000 s'
+            self.exposure = int(self.exposureValueList[self.exposureSlider.value()-1]*1000)
+            string = self.exposureValueOutputWriteList[self.exposureSlider.value()-1]+ ' s'
             self.exposureSliderValueLabel.setText(string)
             self.publish_camera_params_ref()
 
@@ -241,20 +391,20 @@ class MyPlugin(Plugin):
             self.publish_camera_params_ref()
         else:
             self.whiteBalanceSlider.setEnabled(True)
-            self.whitebalance = self.whiteBalanceSlider.value()
+            self.whitebalance = 2800+self.whiteBalanceSlider.value()*500
             string = str(self.whitebalance) + ' K'
             self.whiteBalanceSliderValueLabel.setText(string)
             self.publish_camera_params_ref()
 
     def whiteBalanceSliderValueChanged(self):
         if not self.whitebalance_auto:
-            self.whitebalance = self.whiteBalanceSlider.value()
+            self.whitebalance = 2800+self.whiteBalanceSlider.value()*500
             string = str(self.whitebalance) + ' K'
             self.whiteBalanceSliderValueLabel.setText(string)
             self.publish_camera_params_ref()
 
     def hueSliderValueChanged(self):
-        self.hue = self.hueSlider.value()
+        self.hue = self.hueSlider.value()*4
         string = str(self.hue)
         self.hueSliderValueLabel.setText(string)
         self.publish_camera_params_ref()
@@ -294,16 +444,39 @@ class MyPlugin(Plugin):
         self.publish_water_density_ref()
 
     def lightsSliderValueChanged(self):
-        self.lights = self.lightsSlider.value()
-        string = str(round(self.lights/255*100, 2)) + '%'
+        self.lights = round(self.lightsSlider.value()*(255/10))
+        string = str(round(self.lights/255*100)) + '.0%'
         self.lightsSliderValueLabel.setText(string)
         self.publish_lights_ref()
+        
 
     def boostSliderValueChanged(self):
-        self.boost = self.boostSlider.value()/100.0
+        self.boost = self.boostSlider.value()/10.0
         string = str(round(self.boost*100, 2)) + '%'
         self.boostSliderValueLabel.setText(string)
         self.publish_boost_ref()
+        """
+        valueFromROV = 0.2
+        self.sliderRealValueCheck(0.2, self.boost, self.boostSliderRealValueLabel)"""
+
+        
+    def sliderRealValueCheck(self, valueFromROV, valueFromGUI, sliderCheck):
+        #parameters: self, what to compare first, what to compare second, slider to change
+        #valueFromROV = 0.2 #očitati s vozila vrijednost
+        print("ROV: "+str(valueFromROV))
+        print("GUI: "+str(valueFromGUI))
+        if valueFromROV == valueFromGUI:
+            text = "✓"
+            color = "<span style=\" font-size:11pt; font-weight:600; color:#3BB143;\" >"+text+"</span>"
+            sliderCheck.setText(text)
+        elif valueFromROV < valueFromGUI:
+            text = "↑"
+            color = "<span style=\" font-size:11pt; font-weight:600; color:#E76E00;\" >"+text+"</span>"
+            sliderCheck.setText(text)
+        else:
+            text = "↓"
+            color = "<span style=\" font-size:11pt; font-weight:600; color:#E76E00;\" >"+text+"</span>"
+            sliderCheck.setText(text)
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
@@ -330,10 +503,12 @@ class MyPlugin(Plugin):
         self.publish_boost_ref()
         self.publish_water_density_ref()
         self.publish_auto_mode_ref()
+        self.publish_manual_control_enable_ref()
 
     def initialize_subscribers(self):
         print("Initializing ROS subscribers")
-        """# Initialize ROS subscribers to ROV variables' reference - ROV set topics
+        """
+        # Initialize ROS subscribers to ROV variables' reference - ROV set topics
         self.create_subscription(
             Twist, "thruster_force_norm_ref", self.thruster_force_norm_ref_callback, 10)
         self.create_subscription(
@@ -349,6 +524,27 @@ class MyPlugin(Plugin):
         self.create_subscription(
             Int32, "water_density_ref", self.water_density_ref_callback, 10)
         """
+        
+
+        self.node.create_subscription(
+            Int32, "lights_lvl", self.lights_lvl_callback, 10)
+        self.node.create_subscription(
+            Int32, "auto_mode", self.auto_mode_callback, 10)
+        self.node.create_subscription(
+            BlueyeCameraParams, "camera_params", self.camera_params_callback, 10)
+        """self.node.create_subscription(
+            BlueyeCameraParams, "camera_params_ref", self.camera_params_callback, 10)
+        self.node.create_subscription(
+            BlueyeCameraParams, "lights_lvl_ref", self.lights_callback, 10)
+        self.node.create_subscription(
+            BlueyeCameraParams, "boost_gain_ref", self.boost_callback, 10)
+        self.node.create_subscription(
+            BlueyeCameraParams, "water_density_ref", self.water_density_callback, 10)"""
+        self.node.create_subscription(
+            Float32, "boost_gain", self.boost_gain_callback, 10)
+        self.node.create_subscription(
+            Int32, "water_density", self.water_density_callback, 10)
+        
 
         self.node.create_subscription(Int32, "battery_percentage",
                                       self.battery_percentage_callback, 10)
@@ -394,29 +590,65 @@ class MyPlugin(Plugin):
         self.auto_mode_pub = self.node.create_publisher(
             Int32, "auto_mode_ref", 10)
 
+        #Manual control publisher
+        self.manual_control_enable_pub = self.node.create_publisher(
+            Bool, "manual_control_enable_ref", 10)
+
+
+
     def camera_params_callback(self, msg):
-        """msg = BlueyeCameraParams()
-        self.bitrate = int(msg.bitrate/1000000) 
-        self.exposure_= msg.exposure
-        self.framerate = msg.frames_per_second 
-        self.is_recording = msg.is_recording
-        self.hue = msg.hue
-        self.recording_time = msg.recording_time 
-        self.resolution = msg.resolution
-        self.tilt_angle = msg.tilt_angle
-        self.tilt_speed_ref = msg.tilt_speed_ref
-        self.whitebalance = msg.whitebalance"""
+        # Callback for camera parametars and where it checks and compares for real value
+        self.sliderRealValueCheck(int(msg.bitrate), self.bitrate, self.bitrateSliderRealValueLabel)
+        self.sliderRealValueCheck(msg.exposure, self.exposure, self.exposureSliderRealValueLabel)
+        self.sliderRealValueCheck(msg.frames_per_second, self.framerate, self.framerateComboBoxRealValueLabel)
+        self.sliderRealValueCheck(msg.hue, self.hue, self.hueSliderRealValueLabel)
+        self.sliderRealValueCheck(msg.resolution, self.resolution, self.resolutionComboBoxRealValueLabel)
+        self.sliderRealValueCheck(msg.whitebalance, self.whitebalance, self.whiteBalanceSliderRealValueLabel)
         return
+
+    def auto_mode_callback(self, msg):
+        #        #Callback for auto mode
+        return
+
+
+    def lights_lvl_callback(self, msg):
+        self.sliderRealValueCheck(msg.data, self.lights, self.lightsSliderRealValueLabel)
+
 
     def battery_percentage_callback(self, msg):
         self.battery_lvl = msg.data
         string = str(self.battery_lvl) + '%'
-        self.batteryLevelLabel.setText(string)
+        self.batteryPercentageBar.setValue(self.battery_lvl)
+
+        #self.batteryLevelLabel.setText(string)
+        return
+
+    def boost_gain_callback(self, msg):
+        #Callback for boost gain where it checks and compares for real value
+        self.sliderRealValueCheck(msg.data, self.boost, self.boostSliderRealValueLabel)
+        return
+
+
+    def water_density_callback(self, msg):
+        #Callback for water density where it checks and compares for real value
+        print(str(msg.data))
+        print(str(self.water_density))
+        self.sliderRealValueCheck(msg.data, self.water_density, self.waterDensityDropMenuRealValueLabel)
+        return
+
 
     def publish_auto_mode_ref(self):
         msg = Int32()
         msg.data = 2*self.auto_depth_mode + self.auto_heading_mode
         self.auto_mode_pub.publish(msg)
+        return
+        
+    def publish_manual_control_enable_ref(self):
+        #TODO Ispraviti i dovršiti ovo
+        print('Manual control: '+str(self.manual_control_enable))
+        msg = Bool()
+        msg.data = self.manual_control_enable
+        self.manual_control_enable_pub.publish(msg)
         return
 
     def publish_camera_params_ref(self):

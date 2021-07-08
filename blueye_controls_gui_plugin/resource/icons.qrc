@@ -1,0 +1,11 @@
+<RCC>
+  <qresource prefix="AutoDepthIcon">
+    <file>AutoDepth.png</file>
+  </qresource>
+  <qresource prefix="autoHeadingIcon">
+    <file>AutoHeading.png</file>
+  </qresource>
+  <qresource prefix="manualModeIcon">
+    <file>ManualMode.png</file>
+  </qresource>
+</RCC>
