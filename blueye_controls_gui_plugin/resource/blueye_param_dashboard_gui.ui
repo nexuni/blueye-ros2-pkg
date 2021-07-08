@@ -437,7 +437,7 @@
       <string>Auto heading</string>
      </property>
      <property name="icon">
-      <iconset resource="icons.qrc">
+      <iconset>
        <normaloff>:/autoHeadingIcon/AutoHeading.png</normaloff>:/autoHeadingIcon/AutoHeading.png</iconset>
      </property>
      <property name="iconSize">
@@ -652,7 +652,7 @@
       <string>Manual mode</string>
      </property>
      <property name="icon">
-      <iconset resource="icons.qrc">
+      <iconset>
        <normaloff>:/manualModeIcon/ManualMode.png</normaloff>:/manualModeIcon/ManualMode.png</iconset>
      </property>
      <property name="iconSize">
@@ -808,7 +808,7 @@
       <string>Auto depth</string>
      </property>
      <property name="icon">
-      <iconset resource="icons.qrc">
+      <iconset>
        <normaloff>:/AutoDepthIcon/AutoDepth.png</normaloff>:/AutoDepthIcon/AutoDepth.png</iconset>
      </property>
      <property name="iconSize">
@@ -828,7 +828,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="icons.qrc"/>
+  <include location="ros2_ws/install/blueye_controls_gui_plugin/share/blueye_controls_gui_plugin/resource/icons.qrc"/>
  </resources>
  <connections/>
 </ui>
