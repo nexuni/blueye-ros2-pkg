@@ -79,8 +79,6 @@ class MyPlugin(Plugin):
         # Loading class properties values from ROV during start up
         self.update_class_properties()
         
-        #Testing somethin
-        
         
 
     def initialize_class_properties(self):
@@ -152,7 +150,6 @@ class MyPlugin(Plugin):
                 whitebalanceTemp = int((self.whitebalance-2800)/500)
             
             
-            
             lightsTemp = int(round(self.lights*10/255))
             if self.water_density == 1025:
                 water_densityTemp = 0
@@ -194,7 +191,7 @@ class MyPlugin(Plugin):
         self.manualAutoPushButton.setChecked(False)
 
         self.exposureCheckBox.setChecked(False)
-        self.whiteBalanceCheckBox.setChecked(False) #treba napraviti i za njih da čitaju
+        self.whiteBalanceCheckBox.setChecked(False)
 
         self.exposureSlider.setValue(exposureTemp)
         self.whiteBalanceSlider.setValue(whitebalanceTemp)
@@ -220,12 +217,13 @@ class MyPlugin(Plugin):
             QPushButton, 'autoDepthModeButton')
         self.autoDepthModeButton.clicked.connect(
             self.autoDepthModeButtonClicked)
+        self.autoDepthModeButton.setIcon(QIcon('src/blueye-ros2-pkg/blueye_controls_gui_plugin/resource/AutoDepth.png'))
 
         self.autoHeadingModeButton = self._widget.findChild(
             QPushButton, 'autoHeadingModeButton')
         self.autoHeadingModeButton.clicked.connect(
             self.autoHeadingModeButtonClicked)
-
+        self.autoHeadingModeButton.setIcon(QIcon('src/blueye-ros2-pkg/blueye_controls_gui_plugin/resource/AutoHeading.png'))
         
         #Find manual mode QPushButton and connect their Clicked signal with callbacks
         
@@ -233,7 +231,7 @@ class MyPlugin(Plugin):
             QPushButton, 'manualAutoPushButton')
         self.manualAutoPushButton.clicked.connect(
             self.manualAutoPushButtonClicked)
-
+        self.manualAutoPushButton.setIcon(QIcon('src/blueye-ros2-pkg/blueye_controls_gui_plugin/resource/ManualMode.png'))
 
         # Find exposure_feature-related blocks and connect their signals with callbacks
         self.exposureCheckBox = self._widget.findChild(
@@ -455,28 +453,20 @@ class MyPlugin(Plugin):
         string = str(round(self.boost*100, 2)) + '%'
         self.boostSliderValueLabel.setText(string)
         self.publish_boost_ref()
-        """
-        valueFromROV = 0.2
-        self.sliderRealValueCheck(0.2, self.boost, self.boostSliderRealValueLabel)"""
 
         
     def sliderRealValueCheck(self, valueFromROV, valueFromGUI, sliderCheck):
         #parameters: self, what to compare first, what to compare second, slider to change
-        #valueFromROV = 0.2 #očitati s vozila vrijednost
-        print("ROV: "+str(valueFromROV))
-        print("GUI: "+str(valueFromGUI))
         if valueFromROV == valueFromGUI:
-            text = "✓"
-            color = "<span style=\" font-size:11pt; font-weight:600; color:#3BB143;\" >"+text+"</span>"
-            sliderCheck.setText(text)
+            #color = "<span style=\" font-size:11pt; font-weight:600; color:#3BB143;\" >"+text+"</span>"
+            sliderCheck.setText("✓")
+            sliderCheck.setStyleSheet("color: green;")
         elif valueFromROV < valueFromGUI:
-            text = "↑"
-            color = "<span style=\" font-size:11pt; font-weight:600; color:#E76E00;\" >"+text+"</span>"
-            sliderCheck.setText(text)
+            sliderCheck.setText("↑")
+            sliderCheck.setStyleSheet("color: orange;")
         else:
-            text = "↓"
-            color = "<span style=\" font-size:11pt; font-weight:600; color:#E76E00;\" >"+text+"</span>"
-            sliderCheck.setText(text)
+            sliderCheck.setText("↓")
+            sliderCheck.setStyleSheet("color: orange;")
 
     def shutdown_plugin(self):
         # TODO unregister all publishers here
@@ -507,24 +497,6 @@ class MyPlugin(Plugin):
 
     def initialize_subscribers(self):
         print("Initializing ROS subscribers")
-        """
-        # Initialize ROS subscribers to ROV variables' reference - ROV set topics
-        self.create_subscription(
-            Twist, "thruster_force_norm_ref", self.thruster_force_norm_ref_callback, 10)
-        self.create_subscription(
-            Int32, "lights_lvl_ref", self.lights_lvl_ref_callback, 10)
-        self.create_subscription(
-            Int32, "auto_mode_ref", self.auto_mode_ref_callback, 10)
-        self.create_subscription(
-            BlueyeCameraParams, "camera_params_ref", self.camera_params_ref_callback, 10)
-        self.create_subscription(
-            Float32, "boost_gain_ref", self.boost_gain_ref_callback, 10)
-        self.create_subscription(
-            Float32, "slow_gain_ref", self.slow_gain_ref_callback, 10)
-        self.create_subscription(
-            Int32, "water_density_ref", self.water_density_ref_callback, 10)
-        """
-        
 
         self.node.create_subscription(
             Int32, "lights_lvl", self.lights_lvl_callback, 10)
@@ -532,14 +504,6 @@ class MyPlugin(Plugin):
             Int32, "auto_mode", self.auto_mode_callback, 10)
         self.node.create_subscription(
             BlueyeCameraParams, "camera_params", self.camera_params_callback, 10)
-        """self.node.create_subscription(
-            BlueyeCameraParams, "camera_params_ref", self.camera_params_callback, 10)
-        self.node.create_subscription(
-            BlueyeCameraParams, "lights_lvl_ref", self.lights_callback, 10)
-        self.node.create_subscription(
-            BlueyeCameraParams, "boost_gain_ref", self.boost_callback, 10)
-        self.node.create_subscription(
-            BlueyeCameraParams, "water_density_ref", self.water_density_callback, 10)"""
         self.node.create_subscription(
             Float32, "boost_gain", self.boost_gain_callback, 10)
         self.node.create_subscription(
@@ -551,29 +515,6 @@ class MyPlugin(Plugin):
 
     def initialize_publishers(self):
         print("Initializing ROS publishers")
-        """# Initialize ROS publishers of ROV variables - ROV get topics
-        #self.pose_pub = self.create_publisher(Pose, "pose", 10)
-        # self.thruster_force_norm_pub = self.create_publisher(
-        #   Twist, "thruster_force_norm", 10)
-        self.lights_lvl_pub = self.create_publisher(
-            Int32, "lights_lvl_ref", 10)
-        self.connected_status_pub = self.create_publisher(
-            Bool, "connected_status", 10)
-        self.auto_mode_pub = self.create_publisher(
-            Int32, "auto_mode_ref", 10)  # 00, 01, 10, 11 active state for depth-heading
-        
-        self.battery_percentage_pub = self.create_publisher(
-            Int32, "battery_percentage", 10)
-        self.boost_gain_pub = self.create_publisher(
-            Float32, "boost_gain", 10)
-        self.slow_gain_pub = self.create_publisher(
-            Float32, "slow_gain", 10)
-        self.water_density_pub = self.create_publisher(
-            Int32, "water_density", 10)
-        self.ip_address_pub = self.create_publisher(
-            String, "ip_address", 10)
-        self.software_version_pub = self.create_publisher(
-            String, "software_version", 10) """
 
         self.camera_params_pub = self.node.create_publisher(
             BlueyeCameraParams, "camera_params_ref", 10)
@@ -631,8 +572,8 @@ class MyPlugin(Plugin):
 
     def water_density_callback(self, msg):
         #Callback for water density where it checks and compares for real value
-        print(str(msg.data))
-        print(str(self.water_density))
+        #print(str(msg.data))
+        #print(str(self.water_density))
         self.sliderRealValueCheck(msg.data, self.water_density, self.waterDensityDropMenuRealValueLabel)
         return
 
@@ -644,7 +585,6 @@ class MyPlugin(Plugin):
         return
         
     def publish_manual_control_enable_ref(self):
-        #TODO Ispraviti i dovršiti ovo
         print('Manual control: '+str(self.manual_control_enable))
         msg = Bool()
         msg.data = self.manual_control_enable
