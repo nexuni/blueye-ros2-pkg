@@ -34,7 +34,7 @@ class BlueyeInterface(Node):
         if not self.IS_SIMULATION:
             # TODO: Check if and why yaw and sway are switched
             if (surge_val >= self.VELOCITY_FORCE_MIN and surge_val <= self.VELOCITY_FORCE_MAX):
-                print("Surge force in range. Setting")
+                #print("Surge force in range. Setting")
                 self.drone.motion.surge = surge_val
             elif (surge_val < self.VELOCITY_FORCE_MIN):
                 print("Surge force is below range. Setting to VELOCITY_FORCE_MIN")
@@ -44,7 +44,7 @@ class BlueyeInterface(Node):
                 self.drone.motion.surge = self.VELOCITY_FORCE_MAX
 
             if (sway_val >= self.VELOCITY_FORCE_MIN and sway_val <= self.VELOCITY_FORCE_MAX):
-                print("Sway force in range. Setting")
+                #print("Sway force in range. Setting")
                 self.drone.motion.sway = sway_val  # TODO: Check if .yaw
             elif (sway_val < self.VELOCITY_FORCE_MIN):
                 print("Sway force is below range. Setting to VELOCITY_FORCE_MIN")
@@ -54,7 +54,7 @@ class BlueyeInterface(Node):
                 self.drone.motion.sway = self.VELOCITY_FORCE_MAX
 
             if (heave_val >= self.VELOCITY_FORCE_MIN and heave_val <= self.VELOCITY_FORCE_MAX):
-                print("Heave force in range. Setting")
+                #print("Heave force in range. Setting")
                 self.drone.motion.heave = heave_val
             elif (heave_val < self.VELOCITY_FORCE_MIN):
                 print("Heave force is below range. Setting to VELOCITY_FORCE_MIN")
@@ -64,7 +64,7 @@ class BlueyeInterface(Node):
                 self.drone.motion.heave = self.VELOCITY_FORCE_MAX
 
             if (yaw_val >= self.VELOCITY_FORCE_MIN and yaw_val <= self.VELOCITY_FORCE_MAX):
-                print("Yaw moment force in range. Setting")
+                #print("Yaw moment force in range. Setting")
                 self.drone.motion.yaw = yaw_val  # TODO: Check if .sway
             elif (yaw_val < self.VELOCITY_FORCE_MIN):
                 print("Yaw moment  is below range. Setting to VELOCITY_FORCE_MIN")
@@ -84,7 +84,7 @@ class BlueyeInterface(Node):
         lights_ref = msg.data
         if not self.IS_SIMULATION:
             if (lights_ref >= self.LIGHTS_LEVEL_MIN and lights_ref <= self.LIGHTS_LEVEL_MAX):
-                print("Desired light level is in range. Setting.")
+                #print("Desired light level is in range. Setting.")
                 self.drone.lights = lights_ref
             elif (lights_ref < self.LIGHTS_LEVEL_MIN):
                 print("Desired light level  below range. Setting to LIGHTS_LEVEL_MIN.")
@@ -120,7 +120,7 @@ class BlueyeInterface(Node):
         if not self.IS_SIMULATION:
 
             if (msg.bitrate >= self.CAMERA_BITRATE_MIN and msg.bitrate <= self.CAMERA_BITRATE_MAX):
-                print("Bitrate in range. Setting.")
+                #print("Bitrate in range. Setting.")
                 self.drone.camera.bitrate = msg.bitrate
             elif (msg.bitrate < self.CAMERA_BITRATE_MIN):
                 print("Desired bitrate below limit, setting to CAMERA_BITRATE_MIN")
@@ -130,7 +130,7 @@ class BlueyeInterface(Node):
                 self.drone.camera.bitrate = self.CAMERA_BITRATE_MAX
 
             if msg.exposure >= self.CAMERA_EXPOSURE_MIN and msg.exposure <= self.CAMERA_EXPOSURE_MAX:
-                print("Exposure in range. Setting.")
+                #print("Exposure in range. Setting.")
                 self.drone.camera.exposure = msg.exposure
             elif msg.exposure < self.CAMERA_EXPOSURE_MIN:
                 print("Desired exposure below limit, setting to CAMERA_EXPOSURE_MIN")
@@ -140,7 +140,7 @@ class BlueyeInterface(Node):
                 self.drone.camera.exposure = self.CAMERA_EXPOSURE_MAX
 
             if msg.frames_per_second in self.CAMERA_FRAMERATE_VALUES:
-                print("Framerate in range. Setting.")
+                #print("Framerate in range. Setting.")
                 self.drone.camera.framerate = msg.frames_per_second
             elif msg.frames_per_second < self.CAMERA_FRAMERATE_VALUES[0]:
                 print("Desired framerate below limit, setting to CAMERA_FRAMERATE_MIN")
@@ -152,7 +152,7 @@ class BlueyeInterface(Node):
             self.drone.camera.is_recording = msg.is_recording
 
             if msg.hue >= self.CAMERA_HUE_MIN and msg.hue <= self.CAMERA_HUE_MAX:
-                print("Hue in range. Setting.")
+                #print("Hue in range. Setting.")
                 self.drone.camera.hue = msg.hue
             elif msg.hue < self.CAMERA_HUE_MIN:
                 print("Desired hue below limit, setting to CAMERA_HUE_MIN")
@@ -162,7 +162,7 @@ class BlueyeInterface(Node):
                 self.drone.camera.hue = self.CAMERA_HUE_MAX
 
             if (msg.resolution in self.CAMERA_RESOLUTION_VALUES):
-                print("Resolution in range. Setting.")
+                #print("Resolution in range. Setting.")
                 self.drone.camera.resolution = msg.resolution
                 # print(msg.resolution)
             elif (msg.resolution < self.CAMERA_RESOLUTION_VALUES[0]):
@@ -179,7 +179,7 @@ class BlueyeInterface(Node):
                 self.drone.camera.resolution = self.CAMERA_RESOLUTION_VALUES[2]
 
             if (msg.whitebalance == -1 or (msg.whitebalance >= self.CAMERA_WHITEBALANCE_MIN and msg.whitebalance <= self.CAMERA_WHITEBALANCE_MAX)):
-                print("White balance in range. Setting.")
+                #print("White balance in range. Setting.")
                 self.drone.camera.whitebalance = msg.whitebalance
             elif (msg.whitebalance < self.CAMERA_WHITEBALANCE_MIN):
                 print(
@@ -191,7 +191,7 @@ class BlueyeInterface(Node):
                 self.drone.camera.whitebalance = self.CAMERA_WHITEBALANCE_MAX
 
             if (msg.tilt_speed_ref >= self.CAMERA_TILT_SPEED_MIN and msg.tilt_speed_ref <= self.CAMERA_TILT_SPEED_MAX):
-                print("Tilt speed in range. Setting.")
+                #print("Tilt speed in range. Setting.")
                 self.drone.camera.tilt.set_speed(msg.tilt_speed_ref)
             elif (msg.tilt_speed < self.CAMERA_TILT_SPEED_MIN):
                 print("Desired tilt speed below limit, setting to CAMERA_TILT_SPEED_MIN")
@@ -206,7 +206,7 @@ class BlueyeInterface(Node):
         boost_gain = msg.data
         if not self.IS_SIMULATION:
             if (boost_gain >= self.BOOST_GAIN_MIN and boost_gain <= self.BOOST_GAIN_MAX):
-                print("Boost gain in range. Setting.")
+                #print("Boost gain in range. Setting.")
                 self.drone.motion.boost = boost_gain
             elif (boost_gain < self.BOOST_GAIN_MIN):
                 print("Boost gain below range. Setting to BOOST_GAIN_MIN.")
@@ -228,7 +228,7 @@ class BlueyeInterface(Node):
         slow_gain = msg.data
         if not self.IS_SIMULATION:
             if (slow_gain >= self.SLOW_GAIN_MIN and slow_gain <= self.SLOW_GAIN_MAX):
-                print("Slow gain in range. Setting.")
+                #print("Slow gain in range. Setting.")
                 self.drone.motion.slow = slow_gain
             elif (slow_gain < self.SLOW_GAIN_MIN):
                 print("Slow gain below range. Setting to SLOW_GAIN_MIN.")
@@ -241,7 +241,7 @@ class BlueyeInterface(Node):
         water_density = msg.data
         if not self.IS_SIMULATION:
             if water_density >= self.WATER_DENSITY_MIN and water_density <= self.WATER_DENSITY_MAX:
-                print("Water density in range. Setting.")
+                #print("Water density in range. Setting.")
                 self.drone.config.water_density = water_density
             elif water_density < self.WATER_DENSITY_MIN:
                 print("Water density below range. Setting to WATER_DENSITY_MIN.")
@@ -727,7 +727,7 @@ class BlueyeInterface(Node):
         
 
 def main(args=None):
-    print("Started")
+    #print("Started")
     rclpy.init(args=args)
 
     try:
