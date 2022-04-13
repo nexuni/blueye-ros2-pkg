@@ -381,7 +381,7 @@ class MyPlugin(Plugin):
 
     def whiteBalanceCheckBoxStateChanged(self):
         self.whitebalance_auto = (not self.whiteBalanceCheckBox.checkState())
-        print("WB auto " + str(self.whitebalance_auto))
+        #print("WB auto " + str(self.whitebalance_auto))
         if self.whitebalance_auto:
             self.whitebalance = -1
             self.whiteBalanceSliderValueLabel.setText("Auto")
@@ -585,7 +585,7 @@ class MyPlugin(Plugin):
         return
         
     def publish_manual_control_enable_ref(self):
-        print('Manual control: '+str(self.manual_control_enable))
+        #print('Manual control: '+str(self.manual_control_enable))
         msg = Bool()
         msg.data = self.manual_control_enable
         self.manual_control_enable_pub.publish(msg)
