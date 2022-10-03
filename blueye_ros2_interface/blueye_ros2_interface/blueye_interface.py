@@ -266,82 +266,109 @@ class BlueyeInterface(Node):
             return 0
 
     def joystick_callback(self, msg):
-        buttons = msg.buttons
-        axes = msg.axes
-        
-        btn_north = buttons[0] # or Y button
-        btn_east = buttons[1] # or B button
-        btn_south = buttons[2] # or A button
-        btn_west = buttons[3] # or X button
-        btn_lb = buttons[4]
-        btn_rb = buttons[5]
-        btn_lt = buttons[6] # left trigger
-        btn_rt = buttons[7] # left trigger
-        
-        #handle_x_button(self, value, drone):
-        if btn_west:
-            self.drone.camera.is_recording = not self.drone.camera.is_recording
-        
-        #handle_y_button(self, value, drone):
-        """Turns lights on or off"""
-        self.LIGHTS_LEVEL_DELTA = int(self.LIGHTS_LEVEL_DELTA_PERC/100.0 * (self.LIGHTS_LEVEL_MAX - self.LIGHTS_LEVEL_MIN))
-        self.LIGHTS_LEVEL_TURN_ON = int(self.LIGHTS_LEVEL_TURN_ON_PERC/100.0 * (self.LIGHTS_LEVEL_MAX - self.LIGHTS_LEVEL_MIN))
+        if self.manual_control_enabled:
+            buttons = msg.buttons
+            axes = msg.axes
+            
+            btn_north = buttons[0] # or Y button
+            btn_east = buttons[1] # or B button
+            btn_south = buttons[2] # or A button
+            btn_west = buttons[3] # or X button
+            btn_lb = buttons[4]
+            btn_rb = buttons[5]
+            btn_lt = buttons[6] # left trigger
+            btn_rt = buttons[7] # left trigger
+            
+            #handle_x_button(self, value, drone):
+            if btn_west:
+                self.drone.camera.is_recording = not self.drone.camera.is_recording
+            
+            #handle_y_button(self, value, drone):
+            """Turns lights on or off"""
+            self.LIGHTS_LEVEL_DELTA = int(self.LIGHTS_LEVEL_DELTA_PERC/100.0 * (self.LIGHTS_LEVEL_MAX - self.LIGHTS_LEVEL_MIN))
+            self.LIGHTS_LEVEL_TURN_ON = int(self.LIGHTS_LEVEL_TURN_ON_PERC/100.0 * (self.LIGHTS_LEVEL_MAX - self.LIGHTS_LEVEL_MIN))
+                    
+            if btn_north:
+                if self.drone.lights > self.LIGHTS_LEVEL_MIN:
+                    self.drone.lights = self.LIGHTS_LEVEL_MIN
+                else:
+                    self.drone.lights = self.LIGHTS_LEVEL_TURN_ON        
+            
+            if btn_lb:
+                if (self.drone.lights - self.LIGHTS_LEVEL_DELTA ) >= self.LIGHTS_LEVEL_MIN:
+                    self.drone.lights -= self.LIGHTS_LEVEL_DELTA
+                else:
+                    self.drone.lights = self.LIGHTS_LEVEL_MIN
+            
+            if btn_rb:
+                if (self.drone.lights  + self.LIGHTS_LEVEL_DELTA ) <= self.LIGHTS_LEVEL_MAX:
+                    self.drone.lights += self.LIGHTS_LEVEL_DELTA
+                else:
+                    self.drone.lights = self.LIGHTS_LEVEL_MAX
+                    
+
+            #handle_b_button(self, value, drone):
+                """Toggles autoheading"""
+            if btn_east:
+                self.drone.motion.auto_heading_active = not self.drone.motion.auto_heading_active
+
+            #handle_a_button(self, value, drone):
+            """Toggles autodepth"""
+            if btn_south:
+                self.drone.motion.auto_depth_active = not self.drone.motion.auto_depth_active
+            
+            #handle_left_trigger(self, value, drone):
+            #self.slow = self.drone.motion.slow 
+            self.boost = self.drone.motion.boost 
+
+            if btn_lt:
+                #self.slow += 0.1 
+                self.boost -= 0.1
+            
+            if btn_rt:
+                self.boost += 0.1 
+                #self.slow = 1.0 - self.boost
                 
-        if btn_north:
-            if self.drone.lights > self.LIGHTS_LEVEL_MIN:
-                self.drone.lights = self.LIGHTS_LEVEL_MIN
+            """if self.slow >= self.SLOW_GAIN_MIN and self.slow <= self.SLOW_GAIN_MAX:
+                self.drone.motion.slow = slow
+            elif self.slow < self.SLOW_GAIN_MIN:
+                self.drone.motion.slow = self.SLOW_GAIN_MIN
             else:
-                self.drone.lights = self.LIGHTS_LEVEL_TURN_ON        
-        
-        if btn_lb:
-            if (self.drone.lights - self.LIGHTS_LEVEL_DELTA ) >= self.LIGHTS_LEVEL_MIN:
-                self.drone.lights -= self.LIGHTS_LEVEL_DELTA
+                self.drone.motion.slow = self.SLOW_GAIN_MAX"""
+
+            #handle_right_trigger(self, value, drone):            
+            if self.boost >= self.BOOST_GAIN_MIN and self.boost <= self.BOOST_GAIN_MAX:
+                self.drone.motion.boost = self.boost
+            elif self.boost < self.BOOST_GAIN_MIN:
+                self.drone.motion.boost = self.BOOST_GAIN_MIN
             else:
-                self.drone.lights = self.LIGHTS_LEVEL_MIN
-        
-        if btn_rb:
-            if (self.drone.lights  + self.LIGHTS_LEVEL_DELTA ) <= self.LIGHTS_LEVEL_MAX:
-                self.drone.lights += self.LIGHTS_LEVEL_DELTA
-            else:
-                self.drone.lights = self.LIGHTS_LEVEL_MAX
-                
+                self.drone.motion.boost = self.BOOST_GAIN_MAX
+                        
+            # Scaling of [-1, 1] range from ROS2 joy pkg to [-32768, 32768]
+            # that filter_and_normalize() expects 
+            left_x_axis = int(self.GAMEPAD_AXIS0_SIGN*axes[0]*self.GAMEPAD_AXES_MAX_VALUE)
+            left_y_axis = int(self.GAMEPAD_AXIS1_SIGN*axes[1]*self.GAMEPAD_AXES_MAX_VALUE)
+            right_x_axis = int(self.GAMEPAD_AXIS2_SIGN*axes[2]*self.GAMEPAD_AXES_MAX_VALUE)
+            right_y_axis = int(self.GAMEPAD_AXIS3_SIGN*axes[3]*self.GAMEPAD_AXES_MAX_VALUE)
 
-        #handle_b_button(self, value, drone):
-            """Toggles autoheading"""
-        if btn_east:
-            self.drone.motion.auto_heading_active = not self.drone.motion.auto_heading_active
+            #handle_left_x_axis(self, value, drone):
+            self.drone.motion.yaw = self.filter_and_normalize(left_x_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
 
-        #handle_a_button(self, value, drone):
-        """Toggles autodepth"""
-        if btn_south:
-            self.drone.motion.auto_depth_active = not self.drone.motion.auto_depth_active
-        
-        #handle_left_trigger(self, value, drone):
-        self.drone.motion.slow = self.filter_and_normalize(btn_lt, lower=0, upper = 1) #upper=255)
+            #handle_left_y_axis(self, value, drone):
+            self.drone.motion.heave = self.filter_and_normalize(left_y_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
 
-        #handle_right_trigger(self, value, drone):
-        self.drone.motion.boost = self.filter_and_normalize(btn_rt, lower=0, upper = 1) #upper=255)
-        
-        
-        # Scaling of [-1, 1] range from ROS2 joy pkg to [-32768, 32768]
-        # that filter_and_normalize() expects 
-        left_x_axis = int(self.GAMEPAD_AXIS0_SIGN*axes[0]*self.GAMEPAD_AXES_MAX_VALUE)
-        left_y_axis = int(self.GAMEPAD_AXIS1_SIGN*axes[1]*self.GAMEPAD_AXES_MAX_VALUE)
-        right_x_axis = int(self.GAMEPAD_AXIS2_SIGN*axes[2]*self.GAMEPAD_AXES_MAX_VALUE)
-        right_y_axis = int(self.GAMEPAD_AXIS3_SIGN*axes[3]*self.GAMEPAD_AXES_MAX_VALUE)
+            #handle_right_x_axis(self, value, drone):
+            self.drone.motion.sway = self.filter_and_normalize(right_x_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
 
-        #handle_left_x_axis(self, value, drone):
-        self.drone.motion.yaw = self.filter_and_normalize(left_x_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
+            #handle_right_y_axis(self, value, drone):
+            self.drone.motion.surge = -self.filter_and_normalize(right_y_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
 
-        #handle_left_y_axis(self, value, drone):
-        self.drone.motion.heave = self.filter_and_normalize(left_y_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
+    def manual_control_enable_ref_callback(self, msg):
+        self.manual_control_enabled = msg.data
 
-        #handle_right_x_axis(self, value, drone):
-        self.drone.motion.sway = self.filter_and_normalize(right_x_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
+    def initialize_class_properties(self):
+        self.manual_control_enabled = False
 
-        #handle_right_y_axis(self, value, drone):
-        self.drone.motion.surge = -self.filter_and_normalize(right_y_axis, self.GAMEPAD_DEADZONE, self.GAMEPAD_AXES_MAX_VALUE)
-       
     def declare_node_parameters(self):
         print("Declaring ROS parameters")
         # ROS params
@@ -667,6 +694,8 @@ class BlueyeInterface(Node):
             Int32, "water_density_ref", self.water_density_ref_callback, 10)
         self.create_subscription(
             Joy, "joy", self.joystick_callback, 10)
+        self.create_subscription(
+            Bool, "manual_control_enable_ref", self.manual_control_enable_ref_callback, 10)
 
     def initialize_publishers(self):
         print("Initializing ROS publishers")
@@ -712,6 +741,7 @@ class BlueyeInterface(Node):
 
         super().__init__('blueye_interface')
 
+        self.initialize_class_properties()
         self.declare_node_parameters()
         self.get_ros_params()
 
