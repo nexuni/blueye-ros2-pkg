@@ -35,8 +35,8 @@ blueye: # namespace
       camera_whitebalance_max: 9300
       
       #camera_tilt_angle: 0  # type: float64, range: [30, 30], unit: [°] 
-      camera_tilt_angle_min: -30
-      camera_tilt_angle_max: 30
+      camera_tilt_angle_min: -30.0
+      camera_tilt_angle_max: 30.0
       
       #camera_tilt_speed: 0 # type: int, range: [-1, 1], unit: [] 
       camera_tilt_speed_min: -1
@@ -47,8 +47,8 @@ blueye: # namespace
       lights_level_max: 255    
       
       ## Velocities forces limits: type: float, range: [-1, 1], unit: []
-      velocity_force_min: -1
-      velocity_force_max: 1
+      velocity_force_min: -1.0
+      velocity_force_max: 1.0
       
       ## Boost gain limits: type: float, range: [0, 1], unit: []
       boost_gain_min: 0.0

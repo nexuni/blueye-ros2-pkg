@@ -43,7 +43,7 @@ def generate_launch_description():
     gstreamer_node = Node (
             namespace='blueye',
             name='gstreamer_node',
-            package='gscam',
+            package='gscam2',
             executable='gscam_main',
             output='screen',
             emulate_tty=True,
@@ -54,6 +54,6 @@ def generate_launch_description():
         
     
     ld.add_action(gstreamer_node)      
-    ld.add_action(blueye_node)    
+    # ld.add_action(blueye_node)    
     return ld
 

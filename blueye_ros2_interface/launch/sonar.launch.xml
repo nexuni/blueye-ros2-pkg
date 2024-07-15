@@ -1,0 +1,9 @@
+<launch>
+    <!-- Oculus main node -->
+    <node pkg="blueye_ros2_interface" exec="oculus_sonar.py" output="screen">
+        <param name="tcp_ip" value="192.168.1.118" />
+    </node>
+
+    <!-- RQT Dynamic Reconfigure GUI -->
+    <node pkg="rqt_reconfigure" exec="rqt_reconfigure" output="screen"/>
+</launch>

@@ -25,7 +25,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'blueye_interface = blueye_ros2_interface.blueye_interface:main'
+            'blueye_interface = blueye_ros2_interface.blueye_interface:main',
+            'oculus_sonar = blueye_ros2_interface.oculus_sonar:main'
         ],
     },
 )

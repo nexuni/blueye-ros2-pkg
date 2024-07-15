@@ -26,5 +26,5 @@ def generate_launch_description():
         '/launch/start_blueye_interface_top_side.launch.py'))     
         
     ld.add_action(launch_bttm_side)
-    ld.add_action(launch_top_side)
+    # ld.add_action(launch_top_side)
     return ld
